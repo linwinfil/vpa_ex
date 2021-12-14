@@ -38,6 +38,8 @@ object RenderConstant {
             "void main () {\n" +
             "    vec4 alphaColor = texture2D(texture, v_TexCoordinateAlpha);\n" +
             "    vec4 rgbColor = texture2D(texture, v_TexCoordinateRgb);\n" +
-            "    gl_FragColor = vec4(rgbColor.r, rgbColor.g, rgbColor.b, alphaColor.r);\n" +
+            "    gl_FragColor = vec4(rgbColor.r, rgbColor.g, rgbColor.b, alphaColor.r);\n" +   //使用R通道系数作为alpha系数
             "}"
+
+    const val IMAGE_FRAGMENT_SHADER = ""
 }

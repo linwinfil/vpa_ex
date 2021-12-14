@@ -15,9 +15,11 @@
  */
 package com.tencent.qgame.animplayer.util
 
+import com.tencent.qgame.animplayer.BuildConfig
+
 object ALog {
 
-    var isDebug = false
+    var isDebug = BuildConfig.DEBUG
 
     var log: IALog? = null
 

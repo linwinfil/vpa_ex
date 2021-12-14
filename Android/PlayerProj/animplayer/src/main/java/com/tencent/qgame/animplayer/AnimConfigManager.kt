@@ -154,7 +154,9 @@ class AnimConfigManager(val player: AnimPlayer) {
         fileContainer.closeRandomRead()
 
         val json = String(vapcBuf, 0, vapcBuf.size, Charset.forName("UTF-8"))
-        val jsonObj = JSONObject(json)
+        val jsonObj = JSONObject(json).also {
+            ALog.d(TAG, "parse vapc config:${json}")
+        }
         config.jsonConfig = jsonObj
         val result = config.parse(jsonObj)
         if (defaultFps > 0) {

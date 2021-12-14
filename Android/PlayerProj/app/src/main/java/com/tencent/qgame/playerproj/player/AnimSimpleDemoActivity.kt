@@ -52,6 +52,8 @@ class AnimSimpleDemoActivity : Activity(), IAnimListener {
 
     // ps：每次修改mp4文件，但文件名不变，记得先卸载app，因为assets同名文件不会进行替换
     private val videoInfo = VideoInfo("demo.mp4", "3132824326bb07a1143739863e1e5762")
+    // private val videoInfo = VideoInfo("mvcolor_video.mp4", "3b6f923f42adce43579493919d594a6a")
+    // private val videoInfo = VideoInfo("starshine_video.mp4", "29c00f7eff190328dd7c4f612a435efe")
 
     // 动画View
     private lateinit var animView: AnimView

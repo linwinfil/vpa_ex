@@ -25,6 +25,8 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version") {
         exclude module: 'annotations'
     }
+    api 'jp.co.cyberagent.android:gpuimage:2.1.0'
+
 }
 
 // jcenter 上传(这个要在底部)
