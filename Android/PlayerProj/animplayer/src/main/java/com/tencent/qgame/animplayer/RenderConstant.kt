@@ -41,5 +41,26 @@ object RenderConstant {
             "    gl_FragColor = vec4(rgbColor.r, rgbColor.g, rgbColor.b, alphaColor.r);\n" +   //使用R通道系数作为alpha系数
             "}"
 
+
+    const val IMAGE_VERTEX_SHADER = ""
     const val IMAGE_FRAGMENT_SHADER = ""
+
+    const val SCREEN_VERTEX_SHADER = "\n" +
+            "attribute vec4 vPosition;\n" +
+            "attribute vec2 vCoordinate;\n" +
+            "varying vec2 aCoordinate;\n" +
+            "void main()\n" +
+            "{\n" +
+            "    gl_Position = vPosition;\n" +
+            "    aCoordinate = vCoordinate;\n" +//纹理坐标
+            "}"
+
+    const val SCREEN_FRAGMENT_SHADER = "\n" +
+            "precision mediump float;\n" +
+            "uniform sampler2D screenTexture;\n" +
+            "varying vec2 aCoordinate;\n" +
+            "void main()\n" +
+            "{\n" +
+            "    gl_FragColor = texture2D(screenTexture, aCoordinate);\n" + //纹理采样
+            "}"
 }

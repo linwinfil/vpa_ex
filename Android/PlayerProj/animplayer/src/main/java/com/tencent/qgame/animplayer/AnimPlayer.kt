@@ -68,6 +68,7 @@ class AnimPlayer(val animView: IAnimView) {
         isSurfaceAvailable = true
         startRunnable?.run()
         startRunnable = null
+        onSurfaceTextureSizeChanged(width, height)
     }
 
 

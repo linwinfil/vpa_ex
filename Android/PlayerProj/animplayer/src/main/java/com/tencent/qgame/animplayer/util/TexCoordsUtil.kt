@@ -27,7 +27,31 @@ object TexCoordsUtil {
      * @param width 纹理的宽高
      * @param height
      */
-    fun create(width: Int, height: Int, rect: PointRect, array: FloatArray): FloatArray {
+    fun create(width: Int, height: Int, rect: PointRect, array: FloatArray, isPositive: Boolean = false): FloatArray {
+
+        if (isPositive) {//不需要倒N
+            // x0
+            array[0] = rect.x.toFloat() / width
+            // y0
+            array[1] = (rect.y.toFloat() + rect.h) / height
+
+            // x1
+            array[2] = rect.x.toFloat() / width
+            // y1
+            array[3] = rect.y.toFloat() / height
+
+            // x2
+            array[4] = (rect.x.toFloat() + rect.w) / width
+            // y2
+            array[5] = (rect.y.toFloat() + rect.h) / height
+
+            // x3
+            array[6] = (rect.x.toFloat() + rect.w) / width
+            // y3
+            array[7] = rect.y.toFloat() / height
+
+            return array
+        }
 
         // x0
         array[0] = rect.x.toFloat() / width

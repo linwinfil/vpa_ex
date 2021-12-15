@@ -13,7 +13,7 @@ import com.tencent.qgame.animplayer.util.VertexUtil
 /**
  * Created by linmaoxin on 2021/12/14
  */
-class VpaVideoFilter() : IFilter {
+class VpaVideoFilter : IFilter {
     private val vertexArray = GlFloatArray()
     private val alphaArray = GlFloatArray()
     private val rgbArray = GlFloatArray()
@@ -30,7 +30,7 @@ class VpaVideoFilter() : IFilter {
         vertexArray.setArray(VertexUtil.create(config.width, config.height, PointRect(0, 0, config.width, config.height), vertexArray.array))
     }
 
-    internal fun setTexCoords(config: AnimConfig) {
+    internal fun setTexCoordsBuf(config: AnimConfig) {
         val alpha = TexCoordsUtil.create(config.videoWidth, config.videoHeight, config.alphaPointRect, alphaArray.array)
         val rgb = TexCoordsUtil.create(config.videoWidth, config.videoHeight, config.rgbPointRect, rgbArray.array)
         alphaArray.setArray(alpha)
@@ -55,6 +55,7 @@ class VpaVideoFilter() : IFilter {
     }
 
     override fun getProgram(): Int = shaderProgram
+    override fun getTextureType(): Int = GLES11Ext.GL_TEXTURE_EXTERNAL_OES
     override fun onDrawFrame(textureId: Int): Int {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
@@ -63,14 +64,13 @@ class VpaVideoFilter() : IFilter {
             GLES20.glViewport(0, 0, surfaceWidth, surfaceHeight)
         }
 
-        var oesId = textureId
-        frameBuffer?.bindNext(textureId)
+        frameBuffer?.bindNext(textureId = textureId, isOesTexture = true)
         GLES20.glUseProgram(shaderProgram)
         // 设置顶点坐标
         vertexArray.setVertexAttribPointer(aPositionLocation)
         // 绑定纹理
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
-        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, oesId)
+        GLES20.glBindTexture(getTextureType(), textureId)
         GLES20.glUniform1i(uTextureLocation, 0)
 
         // 设置纹理坐标
@@ -82,11 +82,11 @@ class VpaVideoFilter() : IFilter {
         // draw
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
 
-        oesId = frameBuffer?.let {
-            it.unbind()
-            it.getCurrentTextureId()
-        } ?: oesId
-        return oesId
+        //解绑oes
+        GLES20.glBindTexture(getTextureType(), 0)
+
+        frameBuffer?.unbind(true)
+        return frameBuffer?.getTextureId() ?: textureId
     }
 
     override fun onClearFrame() {

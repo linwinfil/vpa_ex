@@ -18,16 +18,9 @@ package com.tencent.qgame.animplayer
 import android.graphics.SurfaceTexture
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
-import android.view.ViewParent
 import com.tencent.qgame.animplayer.gl.GLFrameBuffer
+import com.tencent.qgame.animplayer.gl.ScreenFilter
 import com.tencent.qgame.animplayer.gl.VpaVideoFilter
-import com.tencent.qgame.animplayer.util.GlFloatArray
-import com.tencent.qgame.animplayer.util.ShaderUtil
-import com.tencent.qgame.animplayer.util.TexCoordsUtil
-import com.tencent.qgame.animplayer.util.VertexUtil
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.nio.ShortBuffer
 
 class RenderAImpl(surfaceTexture: SurfaceTexture) : IRenderListener {
 
@@ -40,6 +33,7 @@ class RenderAImpl(surfaceTexture: SurfaceTexture) : IRenderListener {
 
     private var frameBuffer: GLFrameBuffer? = null
     private val vpaVideoFilter by lazy { VpaVideoFilter() }
+    private val screenFilter by lazy { ScreenFilter() }
 
     init {
         eglUtil.start(surfaceTexture)
@@ -48,14 +42,17 @@ class RenderAImpl(surfaceTexture: SurfaceTexture) : IRenderListener {
 
     private fun setVertexBuf(config: AnimConfig) {
         vpaVideoFilter.setVertexBuf(config)
+        screenFilter.setVertexBuf(config)
     }
 
     private fun setTexCoords(config: AnimConfig) {
-        vpaVideoFilter.setTexCoords(config)
+        vpaVideoFilter.setTexCoordsBuf(config)
+        screenFilter.setTexCoordsBuf(config)
     }
 
     override fun initRender() {
         vpaVideoFilter.onInit()
+        screenFilter.onInit()
 
         GLES20.glGenTextures(genTexture.size, genTexture, 0)
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, genTexture[0])
@@ -66,21 +63,25 @@ class RenderAImpl(surfaceTexture: SurfaceTexture) : IRenderListener {
     }
 
     override fun renderFrame() {
-        vpaVideoFilter.onDrawFrame(genTexture[0])
+        val texture = vpaVideoFilter.onDrawFrame(genTexture[0])
+        screenFilter.onDrawFrame(texture)
     }
 
     override fun clearFrame() {
         vpaVideoFilter.onClearFrame()
+        screenFilter.onClearFrame()
         eglUtil.swapBuffers()
     }
 
     override fun destroyRender() {
         releaseTexture()
         eglUtil.release()
+        frameBuffer?.onDestroy()
     }
 
     override fun releaseTexture() {
         vpaVideoFilter.onRelease()
+        screenFilter.onRelease()
         GLES20.glDeleteTextures(genTexture.size, genTexture, 0)
     }
 
@@ -96,10 +97,13 @@ class RenderAImpl(surfaceTexture: SurfaceTexture) : IRenderListener {
      * 显示区域大小变化
      */
     override fun updateViewPort(width: Int, height: Int) {
-        // frameBuffer?.also { it.onDestroy() }
-        // frameBuffer = GLFrameBuffer(width, height, 1)
-        // vpaVideoFilter.frameBuffer = frameBuffer
+        frameBuffer?.also { it.onDestroy() }
+        if (width > 0 && height > 0) {
+            frameBuffer = GLFrameBuffer(width, height, 1)
+            vpaVideoFilter.frameBuffer = frameBuffer
+        }
         vpaVideoFilter.onSurfaceSize(width, height)
+        screenFilter.onSurfaceSize(width, height)
     }
 
     override fun swapBuffers() {
