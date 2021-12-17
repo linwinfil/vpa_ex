@@ -18,29 +18,33 @@ package com.tencent.qgame.playerproj
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import com.tencent.qgame.playerproj.databinding.ActivityMainBinding
 import com.tencent.qgame.playerproj.player.AnimActiveDemoActivity
 import com.tencent.qgame.playerproj.player.AnimSimpleDemoActivity
 import com.tencent.qgame.playerproj.player.AnimSpecialSizeDemoActivity
 import com.tencent.qgame.playerproj.player.AnimVapxDemoActivity
-import kotlinx.android.synthetic.main.activity_main.*
 
 
-class MainActivity : Activity(){
+class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        btn1.setOnClickListener {
+        val bind = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(bind.root)
+        bind.btn1.setOnClickListener {
             startActivity(Intent(this, AnimSimpleDemoActivity::class.java))
         }
-        btn2.setOnClickListener {
+        bind.btn2.setOnClickListener {
             startActivity(Intent(this, AnimVapxDemoActivity::class.java))
         }
-        btn3.setOnClickListener {
+        bind.btn3.setOnClickListener {
             startActivity(Intent(this, AnimActiveDemoActivity::class.java))
         }
-        btn4.setOnClickListener {
+        bind.btn4.setOnClickListener {
             startActivity(Intent(this, AnimSpecialSizeDemoActivity::class.java))
+        }
+        bind.btn5.setOnClickListener {
+            startActivity(Intent(this, SampleLottieAnimationActivity::class.java))
         }
     }
 

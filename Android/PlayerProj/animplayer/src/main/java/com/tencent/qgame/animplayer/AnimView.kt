@@ -121,6 +121,9 @@ open class AnimView @JvmOverloads constructor(context: Context, attrs: Attribute
         }
     }
 
+    override fun getAppContext():Context {
+        return context
+    }
     override fun getSurfaceTexture(): SurfaceTexture? {
         return innerTextureView?.surfaceTexture ?: surface
     }

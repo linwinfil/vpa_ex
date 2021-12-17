@@ -42,8 +42,24 @@ object RenderConstant {
             "}"
 
 
-    const val IMAGE_VERTEX_SHADER = ""
-    const val IMAGE_FRAGMENT_SHADER = ""
+    const val IMAGE_VERTEX_SHADER = "\n" +
+            "attribute vec4 vPosition;\n" +
+            "attribute vec2 vCoordinate;\n" +
+            "varying vec2 aCoordinate;\n" +
+            "void main()\n" +
+            "{\n" +
+            "    gl_Position = vPosition;\n" +
+            "    aCoordinate = vCoordinate;\n" +//纹理坐标
+            "}"
+
+    const val IMAGE_FRAGMENT_SHADER = "\n" +
+            "precision mediump float;\n" +
+            "uniform sampler2D vTexture;\n" +
+            "varying vec2 aCoordinate;\n" +
+            "\n" +
+            "void main(){\n" +
+            "    gl_FragColor = texture2D(vTexture, aCoordinate);\n" +
+            "}"
 
     const val SCREEN_VERTEX_SHADER = "\n" +
             "attribute vec4 vPosition;\n" +
@@ -57,10 +73,10 @@ object RenderConstant {
 
     const val SCREEN_FRAGMENT_SHADER = "\n" +
             "precision mediump float;\n" +
-            "uniform sampler2D screenTexture;\n" +
+            "uniform sampler2D vTexture;\n" +
             "varying vec2 aCoordinate;\n" +
             "void main()\n" +
             "{\n" +
-            "    gl_FragColor = texture2D(screenTexture, aCoordinate);\n" + //纹理采样
+            "    gl_FragColor = texture2D(vTexture, aCoordinate);\n" + //纹理采样
             "}"
 }

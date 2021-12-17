@@ -15,6 +15,7 @@
  */
 package com.tencent.qgame.animplayer
 
+import android.content.Context
 import android.content.res.AssetManager
 import android.graphics.SurfaceTexture
 import com.tencent.qgame.animplayer.file.IFileContainer
@@ -63,4 +64,6 @@ interface IAnimView {
     fun isRunning(): Boolean
 
     fun getRealSize(): Pair<Int, Int>
+
+    fun getAppContext():Context
 }

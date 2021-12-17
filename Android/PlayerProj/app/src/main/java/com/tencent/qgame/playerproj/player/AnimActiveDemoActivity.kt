@@ -25,6 +25,7 @@ import android.os.Looper
 import android.util.Base64
 import android.util.Log
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import com.tencent.qgame.animplayer.AnimConfig
 import com.tencent.qgame.animplayer.AnimView
 import com.tencent.qgame.animplayer.PointRect
@@ -35,7 +36,7 @@ import com.tencent.qgame.animplayer.util.ALog
 import com.tencent.qgame.animplayer.util.IALog
 import com.tencent.qgame.animplayer.util.ScaleType
 import com.tencent.qgame.playerproj.R
-import kotlinx.android.synthetic.main.activity_anim_simple_demo.*
+import com.tencent.qgame.playerproj.databinding.ActivityAnimSimpleDemoBinding
 import java.io.File
 import java.nio.ByteBuffer
 import java.util.zip.Inflater
@@ -47,7 +48,7 @@ import kotlin.math.sqrt
  * VAPX demo (融合特效Demo)
  * 必须使用组件里提供的工具才能生成VAPX动画
  */
-class AnimActiveDemoActivity : Activity(), IAnimListener {
+class AnimActiveDemoActivity : AppCompatActivity(), IAnimListener {
 
     companion object {
         private const val TAG = "AnimSimpleDemoActivity"
@@ -81,9 +82,11 @@ class AnimActiveDemoActivity : Activity(), IAnimListener {
         super.onStop()
     }
 
+    lateinit var bind:ActivityAnimSimpleDemoBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_anim_simple_demo)
+        bind = ActivityAnimSimpleDemoBinding.inflate(layoutInflater)
+        setContentView(bind.root)
         // 文件加载完成后会调用init方法
         val files = Array(1) {
             videoInfo.fileName
@@ -101,7 +104,7 @@ class AnimActiveDemoActivity : Activity(), IAnimListener {
         // 初始化调试开关
         initTestView()
         // 获取动画view
-        animView = playerView
+        animView = bind.playerView
         // 居中（根据父布局按比例居中并全部显示s）
         animView.setScaleType(ScaleType.FIT_CENTER)
         // 启动过滤遮罩s
@@ -218,18 +221,18 @@ class AnimActiveDemoActivity : Activity(), IAnimListener {
 
 
     private fun initTestView() {
-        btnLayout.visibility = View.VISIBLE
+        bind.btnLayout.visibility = View.VISIBLE
         /**
          * 开始播放按钮
          */
-        btnPlay.setOnClickListener {
+        bind.btnPlay.setOnClickListener {
             updateTestMask()
             play(videoInfo)
         }
         /**
          * 结束视频按钮
          */
-        btnStop.setOnClickListener {
+        bind.btnStop.setOnClickListener {
             animView.stopPlay()
         }
     }

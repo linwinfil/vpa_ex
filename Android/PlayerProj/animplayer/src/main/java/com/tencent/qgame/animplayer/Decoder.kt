@@ -91,7 +91,7 @@ abstract class Decoder(val player: AnimPlayer) : IAnimListener {
                     ALog.i(TAG, "use yuv render")
                     YUVRender(this)
                 } else {
-                    RenderAImpl(this).apply {
+                    RenderAImpl(player.animView.getAppContext(), this).apply {
                         updateViewPort(surfaceWidth, surfaceHeight)
                     }
                 }

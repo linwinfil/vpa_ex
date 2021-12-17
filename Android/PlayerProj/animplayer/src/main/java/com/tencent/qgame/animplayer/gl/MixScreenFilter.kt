@@ -1,12 +1,12 @@
 package com.tencent.qgame.animplayer.gl
 
 import android.content.Context
+import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import android.opengl.GLES30
-import android.opengl.GLUtils
 import com.tencent.qgame.animplayer.AnimConfig
 import com.tencent.qgame.animplayer.PointRect
-import com.tencent.qgame.animplayer.RenderConstant
+import com.tencent.qgame.animplayer.R
 import com.tencent.qgame.animplayer.util.GlFloatArray
 import com.tencent.qgame.animplayer.util.ShaderUtil
 import com.tencent.qgame.animplayer.util.TexCoordsUtil
@@ -16,9 +16,13 @@ import java.lang.IllegalStateException
 /**
  * Created by linmaoxin on 2021/12/15
  */
-class ScreenFilter : IFilter {
+class MixScreenFilter : IFilter {
     private val vertexArray = GlFloatArray()
-    private val texCoordArray = GlFloatArray()
+    private val srcVerTexArray = GlFloatArray()
+    private val srcTexCoordArray = GlFloatArray()
+
+    private val oesVertexArray = GlFloatArray()
+    private val oesTexCoorArray = GlFloatArray()
 
     private var shaderProgram = 0
     private var surfaceWidth = 0
@@ -26,8 +30,10 @@ class ScreenFilter : IFilter {
     private var surfaceSizeChanged = false
 
     private var aPositionLocation: Int = 0
-    private var aCoordinateLocation: Int = 0
-    private var uTextureLocation: Int = 0
+    private var aSrcCoordinateLocation: Int = 0
+    private var aOesCoordinateLocation: Int = 0
+    private var uSrcTextureLocation: Int = 0
+    private var uOesTextureLocation: Int = 0
 
 
     override fun setVertexBuf(config: AnimConfig) {
@@ -35,15 +41,20 @@ class ScreenFilter : IFilter {
     }
 
     override fun setTexCoordsBuf(config: AnimConfig) {
-        val array = TexCoordsUtil.create(config.videoWidth, config.videoHeight, PointRect(0, 0, config.videoWidth, config.videoHeight), texCoordArray.array, true)
-        texCoordArray.setArray(array)
+        val array = TexCoordsUtil.create(config.videoWidth, config.videoHeight,
+            PointRect(0, 0, config.videoWidth, config.videoHeight), srcTexCoordArray.array, true)
+        srcTexCoordArray.setArray(array)
     }
 
     override fun onInit(context: Context) {
-        shaderProgram = ShaderUtil.createProgram(RenderConstant.SCREEN_VERTEX_SHADER, RenderConstant.SCREEN_FRAGMENT_SHADER)
-        aPositionLocation = GLES20.glGetAttribLocation(shaderProgram, "vPosition") //顶点坐标
-        aCoordinateLocation = GLES20.glGetAttribLocation(shaderProgram, "vCoordinate") //纹理坐标
-        uTextureLocation = GLES20.glGetAttribLocation(shaderProgram, "vTexture") //纹理id
+
+        shaderProgram = ShaderUtil.createProgram(context, R.raw.mix_screen_vertex, R.raw.mix_screen_fragment)
+        aPositionLocation = GLES20.glGetAttribLocation(shaderProgram, "a_Position") //顶点坐标
+        aSrcCoordinateLocation = GLES20.glGetAttribLocation(shaderProgram, "a_TextureSrcCoordinates") //纹理坐标
+        aOesCoordinateLocation = GLES20.glGetAttribLocation(shaderProgram, "a_TextureOesCoordionates") //OES坐标
+
+        uSrcTextureLocation = GLES20.glGetAttribLocation(shaderProgram, "u_TextureSrc") //纹理id
+        uOesTextureLocation = GLES20.glGetAttribLocation(shaderProgram, "u_TextureOes")
     }
 
     override fun onSurfaceSize(width: Int, height: Int) {
@@ -67,15 +78,23 @@ class ScreenFilter : IFilter {
 
         // 设置顶点坐标
         vertexArray.setVertexAttribPointer(aPositionLocation)
-        // 设置纹理坐标
-        checkGlError("aaa")
-        texCoordArray.setVertexAttribPointer(aCoordinateLocation)
-        checkGlError("bbb")
 
-        //绑定纹理
+        //2d 纹理坐标
+        srcTexCoordArray.setVertexAttribPointer(aSrcCoordinateLocation)
+
+        //oes 坐标
+        oesTexCoorArray.setVertexAttribPointer(aOesCoordinateLocation)
+
+        //绘制背景图，在绘制oes
+
+        //绑定2d纹理
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
         GLES30.glBindTexture(getTextureType(), textureId)
-        GLES20.glUniform1i(uTextureLocation, 0)
+        GLES20.glUniform1i(uSrcTextureLocation, 0)
+
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE1)
+        GLES30.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, oesTextureId)
+        GLES20.glUniform1i(uOesTextureLocation, 1)
 
         //绘制
         GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4)
@@ -83,6 +102,7 @@ class ScreenFilter : IFilter {
         //解绑
         GLES30.glBindVertexArray(0)
         GLES30.glBindTexture(getTextureType(), 0)
+        GLES30.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, 0)
         GLES30.glUseProgram(0)
 
         return textureId

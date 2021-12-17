@@ -15,8 +15,12 @@
  */
 package com.tencent.qgame.animplayer.util
 
+import android.content.Context
 import android.opengl.GLES20
+import androidx.annotation.RawRes
 import com.tencent.qgame.animplayer.Constant
+import okio.buffer
+import okio.source
 
 object ShaderUtil {
     private const val TAG = "${Constant.TAG}.ShaderUtil"
@@ -24,6 +28,13 @@ object ShaderUtil {
 
     fun createProgram(vertexSource: String, fragmentSource: String): Int {
         val vertexShaderHandle = compileShader(GLES20.GL_VERTEX_SHADER, vertexSource)
+        val fragmentShaderHandle = compileShader(GLES20.GL_FRAGMENT_SHADER, fragmentSource)
+        return createAndLinkProgram(vertexShaderHandle, fragmentShaderHandle)
+    }
+    fun createProgram(context: Context, @RawRes vertexSourceId: Int, @RawRes fragmentSourceId: Int): Int {
+        val vertexSource = context.resources.openRawResource(vertexSourceId).source().buffer().readUtf8()
+        val vertexShaderHandle = compileShader(GLES20.GL_VERTEX_SHADER, vertexSource)
+        val fragmentSource = context.resources.openRawResource(fragmentSourceId).source().buffer().readUtf8()
         val fragmentShaderHandle = compileShader(GLES20.GL_FRAGMENT_SHADER, fragmentSource)
         return createAndLinkProgram(vertexShaderHandle, fragmentShaderHandle)
     }

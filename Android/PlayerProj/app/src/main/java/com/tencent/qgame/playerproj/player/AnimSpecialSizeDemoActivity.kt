@@ -31,7 +31,7 @@ import com.tencent.qgame.animplayer.util.ALog
 import com.tencent.qgame.animplayer.util.IALog
 import com.tencent.qgame.animplayer.util.ScaleType
 import com.tencent.qgame.playerproj.R
-import kotlinx.android.synthetic.main.activity_anim_simple_demo.*
+import com.tencent.qgame.playerproj.databinding.ActivityAnimSimpleDemoBinding
 import java.io.File
 
 /**
@@ -61,9 +61,11 @@ class AnimSpecialSizeDemoActivity : Activity(), IAnimListener {
         Handler(Looper.getMainLooper())
     }
 
+    lateinit var bind:ActivityAnimSimpleDemoBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_anim_simple_demo)
+        bind = ActivityAnimSimpleDemoBinding.inflate(layoutInflater)
+        setContentView(bind.root)
         // 文件加载完成后会调用init方法
         loadFile()
     }
@@ -74,7 +76,7 @@ class AnimSpecialSizeDemoActivity : Activity(), IAnimListener {
         // 初始化调试开关
         initTestView()
         // 获取动画view
-        animView = playerView
+        animView = bind.playerView
         // 视频左右对齐（rgb左\alpha右）
         animView.setVideoMode(Constant.VIDEO_MODE_SPLIT_HORIZONTAL_REVERSE)
         // 兼容老版本视频资源
@@ -193,17 +195,17 @@ class AnimSpecialSizeDemoActivity : Activity(), IAnimListener {
 
 
     private fun initTestView() {
-        btnLayout.visibility = View.VISIBLE
+        bind.btnLayout.visibility = View.VISIBLE
         /**
          * 开始播放按钮
          */
-        btnPlay.setOnClickListener {
+        bind.btnPlay.setOnClickListener {
             play(videoInfo)
         }
         /**
          * 结束视频按钮
          */
-        btnStop.setOnClickListener {
+        bind.btnStop.setOnClickListener {
             animView.stopPlay()
         }
     }

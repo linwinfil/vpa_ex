@@ -26,11 +26,11 @@ class VpaVideoFilter : IFilter {
     private var aTextureAlphaLocation: Int = 0
     private var aTextureRgbLocation: Int = 0
 
-    internal fun setVertexBuf(config: AnimConfig) {
+    override fun setVertexBuf(config: AnimConfig) {
         vertexArray.setArray(VertexUtil.create(config.width, config.height, PointRect(0, 0, config.width, config.height), vertexArray.array))
     }
 
-    internal fun setTexCoordsBuf(config: AnimConfig) {
+    override fun setTexCoordsBuf(config: AnimConfig) {
         val alpha = TexCoordsUtil.create(config.videoWidth, config.videoHeight, config.alphaPointRect, alphaArray.array)
         val rgb = TexCoordsUtil.create(config.videoWidth, config.videoHeight, config.rgbPointRect, rgbArray.array)
         alphaArray.setArray(alpha)
