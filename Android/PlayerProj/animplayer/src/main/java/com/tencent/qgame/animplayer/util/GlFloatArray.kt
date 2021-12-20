@@ -26,15 +26,11 @@ class GlFloatArray {
 
     val array = FloatArray(8)
 
-    private var floatBuffer: FloatBuffer
-
-    init {
-        floatBuffer = ByteBuffer
-            .allocateDirect(array.size * 4)
-            .order(ByteOrder.nativeOrder())
-            .asFloatBuffer()
-            .put(array)
-    }
+    private var floatBuffer: FloatBuffer = ByteBuffer
+        .allocateDirect(array.size * 4)
+        .order(ByteOrder.nativeOrder())
+        .asFloatBuffer()
+        .put(array)
 
     fun setArray(array: FloatArray) {
         floatBuffer.position(0)
@@ -46,5 +42,9 @@ class GlFloatArray {
         floatBuffer.position(0)
         GLES20.glVertexAttribPointer(attributeLocation, 2, GLES20.GL_FLOAT, false, 0, floatBuffer)
         GLES20.glEnableVertexAttribArray(attributeLocation)
+    }
+
+    fun disableVertexAttribPointer(attributeLocation: Int) {
+        GLES20.glDisableVertexAttribArray(attributeLocation)
     }
 }

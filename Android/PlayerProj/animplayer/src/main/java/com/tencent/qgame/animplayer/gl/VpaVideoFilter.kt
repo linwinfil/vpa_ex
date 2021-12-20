@@ -1,12 +1,17 @@
 package com.tencent.qgame.animplayer.gl
 
+import android.content.Context
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import com.tencent.qgame.animplayer.AnimConfig
 import com.tencent.qgame.animplayer.PointRect
+import com.tencent.qgame.animplayer.R
 import com.tencent.qgame.animplayer.RenderConstant
+import com.tencent.qgame.animplayer.gl.fbo.GLFrameBuffer
+import com.tencent.qgame.animplayer.gl.utils.GLUtils
 import com.tencent.qgame.animplayer.util.GlFloatArray
 import com.tencent.qgame.animplayer.util.ShaderUtil
+import com.tencent.qgame.animplayer.util.ShaderUtil.createProgram
 import com.tencent.qgame.animplayer.util.TexCoordsUtil
 import com.tencent.qgame.animplayer.util.VertexUtil
 
@@ -37,10 +42,8 @@ class VpaVideoFilter : IFilter {
         rgbArray.setArray(rgb)
     }
 
-    var frameBuffer: GLFrameBuffer? = null
-
-    override fun onInit() {
-        shaderProgram = ShaderUtil.createProgram(RenderConstant.VERTEX_SHADER, RenderConstant.FRAGMENT_SHADER)
+    override fun onInit(context: Context) {
+        shaderProgram = createProgram(context, R.raw.default_vertex_shader, R.raw.vpa_fragment)
         uTextureLocation = GLES20.glGetUniformLocation(shaderProgram, "texture")
         aPositionLocation = GLES20.glGetAttribLocation(shaderProgram, "vPosition")
         aTextureAlphaLocation = GLES20.glGetAttribLocation(shaderProgram, "vTexCoordinateAlpha")
@@ -52,41 +55,43 @@ class VpaVideoFilter : IFilter {
         surfaceWidth = width
         surfaceHeight = height
         surfaceSizeChanged = true
+        if (surfaceSizeChanged && surfaceWidth > 0 && surfaceHeight > 0) {
+            surfaceSizeChanged = false
+            GLES20.glViewport(0, 0, surfaceWidth, surfaceHeight)
+        }
     }
 
     override fun getProgram(): Int = shaderProgram
     override fun getTextureType(): Int = GLES11Ext.GL_TEXTURE_EXTERNAL_OES
     override fun onDrawFrame(textureId: Int): Int {
-        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
-        if (surfaceSizeChanged && surfaceWidth > 0 && surfaceHeight > 0) {
-            surfaceSizeChanged = false
-            GLES20.glViewport(0, 0, surfaceWidth, surfaceHeight)
-        }
-
-        frameBuffer?.bindNext(textureId = textureId, isOesTexture = true)
         GLES20.glUseProgram(shaderProgram)
         // 设置顶点坐标
         vertexArray.setVertexAttribPointer(aPositionLocation)
+
         // 绑定纹理
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
         GLES20.glBindTexture(getTextureType(), textureId)
         GLES20.glUniform1i(uTextureLocation, 0)
 
+        GLUtils.checkGlError("333")
         // 设置纹理坐标
         // alpha 通道坐标
         alphaArray.setVertexAttribPointer(aTextureAlphaLocation)
         // rgb 通道坐标
         rgbArray.setVertexAttribPointer(aTextureRgbLocation)
 
+        GLUtils.checkGlError("333")
         // draw
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
 
+        alphaArray.disableVertexAttribPointer(aTextureAlphaLocation)
+        rgbArray.disableVertexAttribPointer(aTextureRgbLocation)
+
         //解绑oes
         GLES20.glBindTexture(getTextureType(), 0)
+        GLES20.glUseProgram(0)
 
-        frameBuffer?.unbind(true)
-        return frameBuffer?.getTextureId() ?: textureId
+        return textureId
     }
 
     override fun onClearFrame() {

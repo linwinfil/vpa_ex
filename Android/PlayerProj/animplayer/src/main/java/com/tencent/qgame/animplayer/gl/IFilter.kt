@@ -22,12 +22,3 @@ interface IFilter {
     fun setVertexBuf(config: AnimConfig) {}
     fun setTexCoordsBuf(config: AnimConfig) {}
 }
-
-fun checkGlError(op: String) {
-    val error = GLES20.glGetError()
-    if (error != GLES20.GL_NO_ERROR) {
-        val msg = op + ": glError 0x" + Integer.toHexString(error)
-        ALog.e("checkGlError", msg)
-        throw RuntimeException(msg)
-    }
-}

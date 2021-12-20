@@ -3,26 +3,26 @@ package com.tencent.qgame.animplayer.gl
 import android.content.Context
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
-import android.opengl.GLES30
 import com.tencent.qgame.animplayer.AnimConfig
 import com.tencent.qgame.animplayer.PointRect
 import com.tencent.qgame.animplayer.R
+import com.tencent.qgame.animplayer.gl.utils.GLUtils.checkGlError
 import com.tencent.qgame.animplayer.util.GlFloatArray
 import com.tencent.qgame.animplayer.util.ShaderUtil
 import com.tencent.qgame.animplayer.util.TexCoordsUtil
 import com.tencent.qgame.animplayer.util.VertexUtil
-import java.lang.IllegalStateException
+import javax.microedition.khronos.opengles.GL11Ext
 
 /**
  * Created by linmaoxin on 2021/12/15
  */
 class MixScreenFilter : IFilter {
-    private val vertexArray = GlFloatArray()
-    private val srcVerTexArray = GlFloatArray()
-    private val srcTexCoordArray = GlFloatArray()
+    private val positionVertexArray = GlFloatArray()
+    private val bgVerTexArray = GlFloatArray()
+    private val bgTexCoordArray = GlFloatArray()
 
-    private val oesVertexArray = GlFloatArray()
-    private val oesTexCoorArray = GlFloatArray()
+    private val fgVertexArray = GlFloatArray()
+    private val fgTexCoorArray = GlFloatArray()
 
     private var shaderProgram = 0
     private var surfaceWidth = 0
@@ -30,31 +30,40 @@ class MixScreenFilter : IFilter {
     private var surfaceSizeChanged = false
 
     private var aPositionLocation: Int = 0
-    private var aSrcCoordinateLocation: Int = 0
-    private var aOesCoordinateLocation: Int = 0
-    private var uSrcTextureLocation: Int = 0
-    private var uOesTextureLocation: Int = 0
+    private var aBgCoordinateLocation: Int = 0
+    private var aFgCoordinateLocation: Int = 0
+    private var uBgTextureLocation: Int = 0
+    private var uFgTextureLocation: Int = 0
 
 
     override fun setVertexBuf(config: AnimConfig) {
-        vertexArray.setArray(VertexUtil.create(config.width, config.height, PointRect(0, 0, config.width, config.height), vertexArray.array))
+        //定点坐标
+        positionVertexArray.setArray(VertexUtil.create(config.width, config.height, PointRect(0, 0, config.width, config.height), positionVertexArray.array))
+
+        //纹理坐标
+        bgVerTexArray.setArray(VertexUtil.create(config.width, config.height, PointRect(0, 0, config.width, config.height), bgVerTexArray.array))
+        fgVertexArray.setArray(VertexUtil.create(config.width, config.height, PointRect(0, 0, config.width, config.height), fgVertexArray.array))
     }
 
     override fun setTexCoordsBuf(config: AnimConfig) {
-        val array = TexCoordsUtil.create(config.videoWidth, config.videoHeight,
-            PointRect(0, 0, config.videoWidth, config.videoHeight), srcTexCoordArray.array, true)
-        srcTexCoordArray.setArray(array)
+        bgTexCoordArray.setArray(TexCoordsUtil.create(config.videoWidth, config.videoHeight,
+            PointRect(0, 0, config.videoWidth, config.videoHeight), bgTexCoordArray.array, true)
+        )
+
+        fgTexCoorArray.setArray(TexCoordsUtil.create(config.videoWidth, config.videoHeight,
+            PointRect(0, 0, config.videoWidth, config.videoHeight), fgTexCoorArray.array, true)
+        )
     }
 
     override fun onInit(context: Context) {
 
         shaderProgram = ShaderUtil.createProgram(context, R.raw.mix_screen_vertex, R.raw.mix_screen_fragment)
         aPositionLocation = GLES20.glGetAttribLocation(shaderProgram, "a_Position") //顶点坐标
-        aSrcCoordinateLocation = GLES20.glGetAttribLocation(shaderProgram, "a_TextureSrcCoordinates") //纹理坐标
-        aOesCoordinateLocation = GLES20.glGetAttribLocation(shaderProgram, "a_TextureOesCoordionates") //OES坐标
+        aBgCoordinateLocation = GLES20.glGetAttribLocation(shaderProgram, "a_TextureBgCoordinates") //纹理坐标
+        aFgCoordinateLocation = GLES20.glGetAttribLocation(shaderProgram, "a_TextureFgCoordinates") //OES坐标
 
-        uSrcTextureLocation = GLES20.glGetAttribLocation(shaderProgram, "u_TextureSrc") //纹理id
-        uOesTextureLocation = GLES20.glGetAttribLocation(shaderProgram, "u_TextureOes")
+        uBgTextureLocation = GLES20.glGetUniformLocation(shaderProgram, "u_TextureBg") //纹理id
+        uFgTextureLocation = GLES20.glGetUniformLocation(shaderProgram, "u_TextureFg")
     }
 
     override fun onSurfaceSize(width: Int, height: Int) {
@@ -62,50 +71,55 @@ class MixScreenFilter : IFilter {
         surfaceWidth = width
         surfaceHeight = height
         surfaceSizeChanged = true
+        if (surfaceWidth > 0 && surfaceHeight > 0 && surfaceSizeChanged) {
+            GLES20.glViewport(0, 0, surfaceWidth, surfaceHeight)
+            surfaceSizeChanged = false
+        }
     }
 
     override fun getProgram(): Int = shaderProgram
 
     override fun getTextureType(): Int = GLES20.GL_TEXTURE_2D
 
-    fun onDrawFrame(textureId: Int, oesTextureId: Int): Int {
-        if (surfaceWidth > 0 && surfaceHeight > 0 && surfaceSizeChanged) {
-            GLES20.glViewport(0, 0, surfaceWidth, surfaceHeight)
-            surfaceSizeChanged = false
-        }
+    fun onDrawFrame(bgTextureId: Int, fgTextureId: Int): Int {
+
         //启动
-        GLES30.glUseProgram(shaderProgram)
+        GLES20.glUseProgram(shaderProgram)
 
         // 设置顶点坐标
-        vertexArray.setVertexAttribPointer(aPositionLocation)
+        checkGlError("aaa")
+        positionVertexArray.setVertexAttribPointer(aPositionLocation)
+        //纹理坐标
+        bgTexCoordArray.setVertexAttribPointer(aBgCoordinateLocation)
+        fgTexCoorArray.setVertexAttribPointer(aFgCoordinateLocation)
 
-        //2d 纹理坐标
-        srcTexCoordArray.setVertexAttribPointer(aSrcCoordinateLocation)
+        //绑定纹理
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
+        GLES20.glBindTexture(getTextureType(), bgTextureId)
+        GLES20.glUniform1i(uBgTextureLocation, 0)
 
-        //oes 坐标
-        oesTexCoorArray.setVertexAttribPointer(aOesCoordinateLocation)
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE1)
+        GLES20.glBindTexture(getTextureType(), fgTextureId)
+        GLES20.glUniform1i(uFgTextureLocation, 1)
 
-        //绘制背景图，在绘制oes
 
-        //绑定2d纹理
-        GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
-        GLES30.glBindTexture(getTextureType(), textureId)
-        GLES20.glUniform1i(uSrcTextureLocation, 0)
-
-        GLES30.glActiveTexture(GLES30.GL_TEXTURE1)
-        GLES30.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, oesTextureId)
-        GLES20.glUniform1i(uOesTextureLocation, 1)
-
+        // 融合
+        // GLES20.glEnable(GLES20.GL_BLEND)
+        // GLES20.glBlendFuncSeparate(GLES20.GL_SRC_COLOR, GLES20.GL_SRC_COLOR, GLES20.GL_ONE_MINUS_SRC_COLOR, GLES20.GL_ONE_MINUS_SRC_ALPHA)
+        // GLES20.glBlendEquation(GLES20.GL_FUNC_ADD)
         //绘制
-        GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4)
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
+        // GLES20.glDisable(GLES20.GL_BLEND)
 
         //解绑
-        GLES30.glBindVertexArray(0)
-        GLES30.glBindTexture(getTextureType(), 0)
-        GLES30.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, 0)
-        GLES30.glUseProgram(0)
+        positionVertexArray.disableVertexAttribPointer(aPositionLocation)
+        bgTexCoordArray.disableVertexAttribPointer(aBgCoordinateLocation)
+        fgTexCoorArray.disableVertexAttribPointer(aFgCoordinateLocation)
 
-        return textureId
+        GLES20.glBindTexture(getTextureType(), 0)
+        GLES20.glUseProgram(0)
+
+        return bgTextureId
     }
 
     override fun onDrawFrame(textureId: Int): Int {

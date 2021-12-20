@@ -66,15 +66,11 @@ class HardDecoder(player: AnimPlayer) : Decoder(player), SurfaceTexture.OnFrameA
 
     fun renderData() {
         renderThread.handler?.post {
-            try {
-                glTexture?.apply {
-                    updateTexImage()
-                    render?.renderFrame()
-                    player.pluginManager.onRendering()
-                    render?.swapBuffers()
-                }
-            } catch (e: Throwable) {
-                ALog.e(TAG, "render exception=$e", e)
+            glTexture?.apply {
+                updateTexImage()
+                render?.renderFrame()
+                player.pluginManager.onRendering()
+                render?.swapBuffers()
             }
         }
     }

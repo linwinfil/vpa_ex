@@ -16,15 +16,13 @@
 package com.tencent.qgame.animplayer
 
 import android.content.Context
-import android.content.res.AssetFileDescriptor
 import android.graphics.BitmapFactory
 import android.graphics.SurfaceTexture
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import android.opengl.GLUtils
-import android.util.Size
 import com.tencent.qgame.animplayer.gl.*
-import jp.co.cyberagent.android.gpuimage.util.OpenGlUtils
+import com.tencent.qgame.animplayer.gl.fbo.GLFrameBuffer
 
 class RenderAImpl(val context: Context, surfaceTexture: SurfaceTexture) : IRenderListener {
 
@@ -38,10 +36,11 @@ class RenderAImpl(val context: Context, surfaceTexture: SurfaceTexture) : IRende
     // 1 -> image bitmap texture
     private val genTexture = IntArray(2)
 
+    private val bufferSize = 2
     private var frameBuffer: GLFrameBuffer? = null
     private val imageFilter by lazy { ImageFilter() }
     private val vpaVideoFilter by lazy { VpaVideoFilter() }
-    private val screenFilter by lazy { ScreenFilter() }
+    private val screenFilter by lazy { MixScreenFilter() }
     private val filters = arrayOf(imageFilter, vpaVideoFilter, screenFilter)
 
     init {
@@ -83,15 +82,18 @@ class RenderAImpl(val context: Context, surfaceTexture: SurfaceTexture) : IRende
     }
 
     override fun renderFrame() {
-        //fbo texture
-        // val texture =
+        // 绑定fbo上绘制后取出fbo的纹理id
+        frameBuffer?.bindNext(true)
+        vpaVideoFilter.onDrawFrame(genTexture[0])
+        frameBuffer?.unbind()
+        val fgTexture: Int = frameBuffer?.getTextureId() ?: genTexture[0]
 
-        // var texture = genTexture[1]
-        // texture = imageFilter.onDrawFrame(texture)//fbo的纹理id
+        frameBuffer?.bindNext(true)
+        imageFilter.onDrawFrame(genTexture[1]) //fbo的纹理id
+        frameBuffer?.unbind()
+        val bgTexture: Int = frameBuffer?.getTextureId() ?: genTexture[1]
 
-        val oesTexture = vpaVideoFilter.onDrawFrame(genTexture[0])
-
-        screenFilter.onDrawFrame(oesTexture, oesTexture)
+        screenFilter.onDrawFrame(bgTexture, fgTexture)
     }
 
     override fun clearFrame() {
@@ -124,9 +126,7 @@ class RenderAImpl(val context: Context, surfaceTexture: SurfaceTexture) : IRende
     override fun updateViewPort(width: Int, height: Int) {
         frameBuffer?.also { it.onDestroy() }
         if (width > 0 && height > 0) {
-            frameBuffer = GLFrameBuffer(width, height, 1)
-            vpaVideoFilter.frameBuffer = frameBuffer
-            imageFilter.frameBuffer = frameBuffer
+            frameBuffer = GLFrameBuffer(width, height, bufferSize)
         }
         filters.forEach { it.onSurfaceSize(width, height) }
     }

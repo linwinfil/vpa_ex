@@ -7,6 +7,7 @@ import android.opengl.GLUtils
 import com.tencent.qgame.animplayer.AnimConfig
 import com.tencent.qgame.animplayer.PointRect
 import com.tencent.qgame.animplayer.RenderConstant
+import com.tencent.qgame.animplayer.gl.utils.GLUtils.checkGlError
 import com.tencent.qgame.animplayer.util.GlFloatArray
 import com.tencent.qgame.animplayer.util.ShaderUtil
 import com.tencent.qgame.animplayer.util.TexCoordsUtil
@@ -51,17 +52,18 @@ class ScreenFilter : IFilter {
         surfaceWidth = width
         surfaceHeight = height
         surfaceSizeChanged = true
+        if (surfaceWidth > 0 && surfaceHeight > 0 && surfaceSizeChanged) {
+            GLES20.glViewport(0, 0, surfaceWidth, surfaceHeight)
+            surfaceSizeChanged = false
+        }
     }
 
     override fun getProgram(): Int = shaderProgram
 
     override fun getTextureType(): Int = GLES20.GL_TEXTURE_2D
 
-    fun onDrawFrame(textureId: Int, oesTextureId: Int): Int {
-        if (surfaceWidth > 0 && surfaceHeight > 0 && surfaceSizeChanged) {
-            GLES20.glViewport(0, 0, surfaceWidth, surfaceHeight)
-            surfaceSizeChanged = false
-        }
+    override fun onDrawFrame(textureId: Int): Int {
+
         //启动
         GLES30.glUseProgram(shaderProgram)
 
@@ -81,15 +83,14 @@ class ScreenFilter : IFilter {
         GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4)
 
         //解绑
-        GLES30.glBindVertexArray(0)
+
+        vertexArray.disableVertexAttribPointer(aPositionLocation)
+        texCoordArray.disableVertexAttribPointer(aCoordinateLocation)
+
         GLES30.glBindTexture(getTextureType(), 0)
         GLES30.glUseProgram(0)
 
         return textureId
-    }
-
-    override fun onDrawFrame(textureId: Int): Int {
-        throw IllegalStateException("call function onDrawFrame(Int,Int)")
     }
 
     override fun onClearFrame() {

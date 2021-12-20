@@ -9,9 +9,13 @@ import android.opengl.GLES30
 import android.util.Log
 import com.tencent.qgame.animplayer.AnimConfig
 import com.tencent.qgame.animplayer.PointRect
+import com.tencent.qgame.animplayer.R
 import com.tencent.qgame.animplayer.RenderConstant
+import com.tencent.qgame.animplayer.gl.fbo.GLFrameBuffer
+import com.tencent.qgame.animplayer.gl.utils.GLUtils
 import com.tencent.qgame.animplayer.util.GlFloatArray
 import com.tencent.qgame.animplayer.util.ShaderUtil
+import com.tencent.qgame.animplayer.util.ShaderUtil.createProgram
 import com.tencent.qgame.animplayer.util.TexCoordsUtil
 import com.tencent.qgame.animplayer.util.VertexUtil
 
@@ -33,10 +37,9 @@ class ImageFilter : IFilter {
 
     var bmpWidth = 0
     var bmpHeight = 0
-    var frameBuffer: GLFrameBuffer? = null
 
     override fun onInit(context: Context) {
-        shaderProgram = ShaderUtil.createProgram(RenderConstant.IMAGE_VERTEX_SHADER, RenderConstant.IMAGE_FRAGMENT_SHADER)
+        shaderProgram = createProgram(context, R.raw.image_vertex_shader, R.raw.image_fragment)
         aPositionLocation = GLES20.glGetAttribLocation(shaderProgram, "vPosition") //顶点坐标
         aCoordinateLocation = GLES20.glGetAttribLocation(shaderProgram, "vCoordinate") //纹理坐标
         uTextureLocation = GLES20.glGetAttribLocation(shaderProgram, "vTexture") //纹理id
@@ -71,17 +74,16 @@ class ImageFilter : IFilter {
         surfaceWidth = width
         surfaceHeight = height
         surfaceSizeChanged = true
+        if (surfaceWidth > 0 && surfaceHeight > 0 && surfaceSizeChanged) {
+            GLES20.glViewport(0, 0, surfaceWidth, surfaceHeight)
+            surfaceSizeChanged = false
+        }
     }
 
     override fun getProgram(): Int = shaderProgram
     override fun getTextureType(): Int = GLES20.GL_TEXTURE_2D
 
     override fun onDrawFrame(textureId: Int): Int {
-        if (surfaceWidth > 0 && surfaceHeight > 0 && surfaceSizeChanged) {
-            GLES20.glViewport(0, 0, surfaceWidth, surfaceHeight)
-            surfaceSizeChanged = false
-        }
-        frameBuffer?.bindNext(textureId)
 
         GLES20.glUseProgram(shaderProgram)
         vertexArray.setVertexAttribPointer(aPositionLocation)   // 设置顶点坐标
@@ -89,17 +91,21 @@ class ImageFilter : IFilter {
 
         //激活纹理
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
+        GLUtils.checkGlError("333")
         GLES30.glBindTexture(getTextureType(), textureId)
         GLES20.glUniform1i(uTextureLocation, 0)
         //绘制
+        GLUtils.checkGlError("333")
         GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4)
+
         //解绑
-        GLES30.glBindVertexArray(0)
+        vertexArray.disableVertexAttribPointer(aPositionLocation)
+        texCoordArray.disableVertexAttribPointer(aCoordinateLocation)
+
         GLES30.glBindTexture(getTextureType(), 0)
         GLES30.glUseProgram(0)
 
-        frameBuffer?.unbind()
-        return frameBuffer?.getTextureId() ?: textureId
+        return textureId
     }
 
     override fun onClearFrame() {

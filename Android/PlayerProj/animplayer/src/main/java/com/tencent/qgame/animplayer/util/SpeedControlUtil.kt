@@ -22,7 +22,7 @@ class SpeedControlUtil {
     companion object {
         private const val TAG = "${Constant.TAG}.SpeedControlUtil"
     }
-    private val ONE_MILLION = 1000000L
+    private val ONE_MILLION = 1000_000L
 
     private var prevPresentUsec: Long = 0
     private var prevMonoUsec: Long = 0
@@ -62,7 +62,10 @@ class SpeedControlUtil {
                     sleepTimeUsec = 500000
                 }
                 try {
-                    Thread.sleep(sleepTimeUsec / 1000, (sleepTimeUsec % 1000).toInt() * 1000)
+                    val millis = sleepTimeUsec / 1000
+                    val nanos = (sleepTimeUsec % 1000).toInt() * 1000
+                    ALog.i(TAG,"sleep $millis, $nanos")
+                    Thread.sleep(millis, nanos)
                 } catch (e: InterruptedException) {
                     ALog.e(TAG, "e=$e", e)
                 }
