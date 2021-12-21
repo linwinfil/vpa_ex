@@ -179,7 +179,7 @@ class HardDecoder(player: AnimPlayer) : Decoder(player), SurfaceTexture.OnFrameA
     }
 
     private fun startDecode(extractor: MediaExtractor ,decoder: MediaCodec) {
-        val TIMEOUT_USEC = 10000L
+        val TIMEOUT_USEC = 10_000L
         var inputChunk = 0
         var outputDone = false
         var inputDone = false
@@ -203,25 +203,25 @@ class HardDecoder(player: AnimPlayer) : Decoder(player), SurfaceTexture.OnFrameA
                     if (chunkSize < 0) {
                         decoder.queueInputBuffer(inputBufIndex, 0, 0, 0L, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
                         inputDone = true
-                        ALog.d(TAG, "decode EOS")
+                        ALog.i(TAG, "decode EOS")
                     } else {
                         val presentationTimeUs = extractor.sampleTime
                         decoder.queueInputBuffer(inputBufIndex, 0, chunkSize, presentationTimeUs, 0)
-                        ALog.d(TAG, "submitted frame $inputChunk to dec, size=$chunkSize")
+                        ALog.i(TAG, "submitted frame $inputChunk to dec, size=$chunkSize")
                         inputChunk++
                         extractor.advance()
                     }
                 } else {
-                    ALog.d(TAG, "input buffer not available")
+                    ALog.i(TAG, "input buffer not available")
                 }
             }
 
             if (!outputDone) {
                 val decoderStatus = decoder.dequeueOutputBuffer(bufferInfo, TIMEOUT_USEC)
                 when {
-                    decoderStatus == MediaCodec.INFO_TRY_AGAIN_LATER -> ALog.d(TAG, "no output from decoder available")
-                    decoderStatus == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED -> ALog.d(TAG, "decoder output buffers changed")
-                    decoderStatus == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
+                    decoderStatus == MediaCodec.INFO_TRY_AGAIN_LATER -> ALog.d(TAG, "no output from decoder available")//表示获取编解码器输出缓存区超时
+                    decoderStatus == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED -> ALog.d(TAG, "decoder output buffers changed")//需要重新获取输出缓存区集合
+                    decoderStatus == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {//表示编解码器数据输出格式改变，随后输出的数据将使用新的格式
                         outputFormat = decoder.outputFormat
                         outputFormat?.apply {
                             try {
@@ -267,7 +267,7 @@ class HardDecoder(player: AnimPlayer) : Decoder(player), SurfaceTexture.OnFrameA
                         onVideoRender(frameIndex, player.configManager.config)
 
                         frameIndex++
-                        ALog.d(TAG, "decode frameIndex=$frameIndex")
+                        ALog.i(TAG, "decode frameIndex=$frameIndex")
                         if (loop > 0) {
                             ALog.d(TAG, "Reached EOD, looping")
                             player.pluginManager.onLoopStart()

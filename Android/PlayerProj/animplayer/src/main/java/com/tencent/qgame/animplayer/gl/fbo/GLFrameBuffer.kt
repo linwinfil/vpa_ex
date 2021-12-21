@@ -14,8 +14,8 @@ class GLFrameBuffer constructor(bufferWidth: Int, bufferHeight: Int, private val
     private val textureIds: IntArray = IntArray(bufferSize)
 
     init {
+        checkGlError("gen frame buffer ")
         checkArgument(bufferWidth, bufferHeight)
-
         GLES20.glGenTextures(bufferSize, textureIds, 0)
         GLES20.glGenFramebuffers(bufferSize, bufferIds, 0)
 

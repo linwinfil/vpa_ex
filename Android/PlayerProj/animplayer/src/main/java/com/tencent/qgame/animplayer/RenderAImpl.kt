@@ -21,8 +21,12 @@ import android.graphics.SurfaceTexture
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import android.opengl.GLUtils
-import com.tencent.qgame.animplayer.gl.*
+import com.tencent.qgame.animplayer.gl.IFilter
+import com.tencent.qgame.animplayer.gl.MixScreenFilter
+import com.tencent.qgame.animplayer.gl.RGBShiftFilter
+import com.tencent.qgame.animplayer.gl.VpaVideoFilter
 import com.tencent.qgame.animplayer.gl.fbo.GLFrameBuffer
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageGammaFilter
 
 class RenderAImpl(val context: Context, surfaceTexture: SurfaceTexture) : IRenderListener {
 
@@ -38,7 +42,7 @@ class RenderAImpl(val context: Context, surfaceTexture: SurfaceTexture) : IRende
 
     private val bufferSize = 2
     private var frameBuffer: GLFrameBuffer? = null
-    private val imageFilter by lazy { ImageFilter() }
+    private val imageFilter by lazy { RGBShiftFilter() }
     private val vpaVideoFilter by lazy { VpaVideoFilter() }
     private val screenFilter by lazy { MixScreenFilter() }
     private val filters = arrayOf(imageFilter, vpaVideoFilter, screenFilter)
@@ -94,6 +98,12 @@ class RenderAImpl(val context: Context, surfaceTexture: SurfaceTexture) : IRende
         val bgTexture: Int = frameBuffer?.getTextureId() ?: genTexture[1]
 
         screenFilter.onDrawFrame(bgTexture, fgTexture)
+    }
+
+    fun setRgbShiftIntensity(intensity: Float) {
+        if (imageFilter is RGBShiftFilter) {
+            (imageFilter as RGBShiftFilter).setIntensity(intensity)
+        }
     }
 
     override fun clearFrame() {

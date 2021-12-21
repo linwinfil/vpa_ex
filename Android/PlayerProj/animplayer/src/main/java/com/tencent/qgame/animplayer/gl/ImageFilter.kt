@@ -39,10 +39,10 @@ class ImageFilter : IFilter {
     var bmpHeight = 0
 
     override fun onInit(context: Context) {
-        shaderProgram = createProgram(context, R.raw.image_vertex_shader, R.raw.image_fragment)
+        shaderProgram = createProgram(context, R.raw.img_vertex_shader, R.raw.image_fragment)
         aPositionLocation = GLES20.glGetAttribLocation(shaderProgram, "vPosition") //顶点坐标
         aCoordinateLocation = GLES20.glGetAttribLocation(shaderProgram, "vCoordinate") //纹理坐标
-        uTextureLocation = GLES20.glGetAttribLocation(shaderProgram, "vTexture") //纹理id
+        uTextureLocation = GLES20.glGetUniformLocation(shaderProgram, "vTexture") //纹理id
     }
 
 

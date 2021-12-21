@@ -28,6 +28,7 @@ class SpeedControlUtil {
     private var prevMonoUsec: Long = 0
     private var fixedFrameDurationUsec: Long = 0
     private var loopReset = true
+    private var sleepCount = 0
 
     fun setFixedPlaybackRate(fps: Int) {
         if (fps <=0) return
@@ -64,7 +65,7 @@ class SpeedControlUtil {
                 try {
                     val millis = sleepTimeUsec / 1000
                     val nanos = (sleepTimeUsec % 1000).toInt() * 1000
-                    ALog.i(TAG,"sleep $millis, $nanos")
+                    ALog.i(TAG,"sleep $millis, $nanos, ${++sleepCount}")
                     Thread.sleep(millis, nanos)
                 } catch (e: InterruptedException) {
                     ALog.e(TAG, "e=$e", e)
@@ -78,6 +79,7 @@ class SpeedControlUtil {
     }
 
     fun reset() {
+        sleepCount = 0
         prevPresentUsec = 0
         prevMonoUsec = 0
     }

@@ -7,6 +7,7 @@ import android.graphics.RectF
 import android.opengl.GLES20
 import android.opengl.GLES30
 import android.util.Log
+import androidx.annotation.FloatRange
 import com.tencent.qgame.animplayer.AnimConfig
 import com.tencent.qgame.animplayer.PointRect
 import com.tencent.qgame.animplayer.R
@@ -63,7 +64,7 @@ class RGBShiftFilter : IFilter {
         texCoordArray.setArray(array)
     }
 
-    fun setIntensity(intensity: Float) {
+    fun setIntensity(@FloatRange(from = 0.0, to = 1.0) intensity: Float) {
         GLES20.glUniform1f(uAmountLocation, 0.03f * intensity)
     }
 
@@ -72,16 +73,12 @@ class RGBShiftFilter : IFilter {
     }
 
     override fun onInit(context: Context) {
-        shaderProgram = ShaderUtil.createProgram(context, R.raw.image_vertex_shader, R.raw.rgb_shift_fragment)
+        shaderProgram = ShaderUtil.createProgram(context, R.raw.img_vertex_shader, R.raw.rgb_shift_fragment)
         aPositionLocation = GLES20.glGetAttribLocation(shaderProgram, "vPosition") //顶点坐标
         aCoordinateLocation = GLES20.glGetAttribLocation(shaderProgram, "vCoordinate") //纹理坐标
-        uTextureLocation = GLES20.glGetAttribLocation(shaderProgram, "vTexture") //纹理id
-
-        uAmountLocation = GLES20.glGetAttribLocation(shaderProgram, "u_amount")
-        uAngleLocation = GLES20.glGetAttribLocation(shaderProgram, "u_angle")
-
-        setIntensity(0.01f)
-        setTime(0f)
+        uTextureLocation = GLES20.glGetUniformLocation(shaderProgram, "vTexture") //纹理id
+        uAmountLocation = GLES20.glGetUniformLocation(shaderProgram, "u_amount")
+        uAngleLocation = GLES20.glGetUniformLocation(shaderProgram, "u_angle")
     }
 
     override fun onSurfaceSize(width: Int, height: Int) {
@@ -109,8 +106,11 @@ class RGBShiftFilter : IFilter {
         GLUtils.checkGlError("333")
         GLES30.glBindTexture(getTextureType(), textureId)
         GLES20.glUniform1i(uTextureLocation, 0)
+
+        setIntensity(0.3f)
+        setTime(++times * 0.06f)
+
         //绘制
-        GLUtils.checkGlError("333")
         GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4)
 
         //解绑
@@ -122,6 +122,8 @@ class RGBShiftFilter : IFilter {
 
         return textureId
     }
+
+    var times: Int = 0
 
     override fun onClearFrame() {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f)

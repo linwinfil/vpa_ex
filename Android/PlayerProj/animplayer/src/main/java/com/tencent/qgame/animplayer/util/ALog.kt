@@ -19,7 +19,7 @@ import com.tencent.qgame.animplayer.BuildConfig
 
 object ALog {
 
-    var isDebug = BuildConfig.DEBUG
+    var isDebug = /*BuildConfig.DEBUG*/true
 
     var log: IALog? = null
 

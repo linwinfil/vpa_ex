@@ -15,7 +15,6 @@
  */
 package com.tencent.qgame.playerproj.player
 
-import android.app.Activity
 import android.content.Context
 import android.os.Bundle
 import android.os.Environment
@@ -23,20 +22,20 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import com.tencent.qgame.animplayer.AnimConfig
 import com.tencent.qgame.animplayer.AnimView
 import com.tencent.qgame.animplayer.inter.IAnimListener
 import com.tencent.qgame.animplayer.util.ALog
 import com.tencent.qgame.animplayer.util.IALog
 import com.tencent.qgame.animplayer.util.ScaleType
-import com.tencent.qgame.playerproj.R
 import com.tencent.qgame.playerproj.databinding.ActivityAnimSimpleDemoBinding
 import java.io.File
 
 /**
  * 简单使用demo
  */
-class AnimSimpleDemoActivity : Activity(), IAnimListener {
+class AnimSimpleDemoActivity : AppCompatActivity(), IAnimListener {
 
     companion object {
         private const val TAG = "AnimSimpleDemoActivity"
