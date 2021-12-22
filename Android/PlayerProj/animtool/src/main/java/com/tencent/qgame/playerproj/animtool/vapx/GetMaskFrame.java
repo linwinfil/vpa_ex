@@ -38,7 +38,7 @@ public class GetMaskFrame {
         int startX = x;
         int lastMaxY = y;
         for (int i=0; i<commonArg.srcSet.srcs.size(); i++) {
-            frame = getFrame(frameIndex, commonArg.srcSet.srcs.get(i), outputArgb, commonArg.outputW, commonArg.outputH, x, y, startX, lastMaxY);
+            frame = getFrame(frameIndex, commonArg.srcSet.srcs.get(i), outputArgb, commonArg.outputW, commonArg.outputH, commonArg.endSuffix, x, y, startX, lastMaxY);
             if (frame == null) continue;
             // 计算下一个遮罩起点
             x = frame.mFrame.x + frame.mFrame.w + gap;
@@ -58,8 +58,8 @@ public class GetMaskFrame {
     }
 
 
-    private FrameSet.Frame getFrame(int frameIndex, SrcSet.Src src, int[] outputArgb, int outW, int outH, int x, int y, int startX, int lastMaxY) throws Exception {
-        File inputFile = new File(src.srcPath  + String.format("%03d", frameIndex)+".png");
+    private FrameSet.Frame getFrame(int frameIndex, SrcSet.Src src, int[] outputArgb, int outW, int outH, String endSuffix,int x, int y, int startX, int lastMaxY) throws Exception {
+        File inputFile = new File(src.srcPath  + String.format("%03d", frameIndex)+endSuffix);
         if (!inputFile.exists()) {
             return null;
         }

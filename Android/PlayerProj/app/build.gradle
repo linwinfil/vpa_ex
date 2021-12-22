@@ -10,9 +10,14 @@ android {
     defaultConfig {
         applicationId "com.tencent.qgame.playerproj"
         minSdkVersion 21
-        targetSdkVersion 30
+        targetSdkVersion 31
         versionCode 1
         versionName "1.0"
+
+        ndk {
+            abiFilters "armeabi-v7a",'arm64-v8a'
+            moduleName "app"
+        }
     }
     buildTypes {
         release {
@@ -47,5 +52,7 @@ dependencies {
     implementation 'com.airbnb.android:lottie:4.2.2'
     implementation 'com.blankj:utilcodex:1.31.0'
 
+    implementation 'com.github.AnJoiner:FFmpegCommand:1.2.1-lite'
+    // implementation 'com.github.AnJoiner:FFmpegCommand:1.2.1'
 
 }

@@ -21,6 +21,8 @@ import com.tencent.qgame.playerproj.animtool.vapx.SrcSet;
 
 public class CommonArg {
 
+    public String endSuffix = ".jpg";
+
     public String ffmpegCmd = "ffmpeg"; // ffmpeg 命令地址
 
     public String mp4editCmd = "mp4edit"; // bento4 mp4edit 命令地址

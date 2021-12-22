@@ -47,7 +47,7 @@ class MainActivity : Activity() {
             startActivity(Intent(this, SampleLottieAnimationActivity::class.java))
         }
 
-        bind.btn1.performClick()
+        bind.btn5.performClick()
     }
 
 

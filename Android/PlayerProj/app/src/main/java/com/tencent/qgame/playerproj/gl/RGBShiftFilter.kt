@@ -3,12 +3,12 @@ package com.tencent.qgame.playerproj.gl
 import android.content.Context
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
 import android.opengl.GLES20
+import androidx.annotation.FloatRange
 import com.tencent.qgame.playerproj.R
 import okio.buffer
 import okio.source
 
-class RGBShiftFilter(context: Context) : GPUImageFilter(NO_FILTER_VERTEX_SHADER,
-    context.resources.openRawResource(R.raw.rgb_shift_fragment).source().buffer().readUtf8()) {
+class RGBShiftFilter(vertex: String, fragment: String) : GPUImageFilter(vertex, fragment) {
     private var amountUniform = 0
     private var angleUniform = 0
     override fun onInit() {
@@ -25,7 +25,7 @@ class RGBShiftFilter(context: Context) : GPUImageFilter(NO_FILTER_VERTEX_SHADER,
         }
     }
 
-    fun setTime(time: Float) {
+    fun setTime(@FloatRange(from = 0.0, to = 1.0)time: Float) {
         runOnDraw { GLES20.glUniform1f(angleUniform, 10 * time) }
     }
 

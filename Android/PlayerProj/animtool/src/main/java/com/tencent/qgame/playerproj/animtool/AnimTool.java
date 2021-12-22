@@ -169,7 +169,7 @@ public class AnimTool {
     }
 
     private void createFrame(CommonArg commonArg, int frameIndex) throws Exception {
-        File inputFile = new File(commonArg.inputPath + String.format("%03d", frameIndex)+".png");
+        File inputFile = new File(commonArg.inputPath + String.format("%03d", frameIndex)+commonArg.endSuffix);
         GetAlphaFrame.AlphaFrameOut videoFrame = getAlphaFrame.createFrame(commonArg, inputFile);
         if (commonArg.isVapx) {
             FrameSet.FrameObj frameObj = getMaskFrame.getFrameObj(frameIndex, commonArg, videoFrame.argb);
@@ -185,7 +185,7 @@ public class AnimTool {
         BufferedImage outBuf = new BufferedImage(commonArg.outputW, commonArg.outputH, BufferedImage.TYPE_INT_ARGB);
         outBuf.setRGB(0,0, commonArg.outputW, commonArg.outputH, videoFrame.argb, 0, commonArg.outputW);
 
-        File outputFile = new File(commonArg.frameOutputPath + String.format("%03d", frameIndex) +".png");
+        File outputFile = new File(commonArg.frameOutputPath + String.format("%03d", frameIndex) +commonArg.endSuffix);
         ImageIO.write(outBuf, "PNG", outputFile);
     }
 
@@ -321,7 +321,7 @@ public class AnimTool {
         if (commonArg.enableH265) {
             if (commonArg.enableCrf) {
                 cmd = new String[] {commonArg.ffmpegCmd, "-framerate", String.valueOf(commonArg.fps),
-                        "-i", frameImagePath + "%03d.png",
+                        "-i", frameImagePath + "%03d"+commonArg.endSuffix,
                         "-pix_fmt", "yuv420p",
                         "-vcodec", "libx265",
                         "-crf", Integer.toString(commonArg.crf),
@@ -332,7 +332,7 @@ public class AnimTool {
                         "-y", videoPath + TEMP_VIDEO_FILE};
             } else {
                 cmd = new String[] {commonArg.ffmpegCmd, "-framerate", String.valueOf(commonArg.fps),
-                        "-i", frameImagePath + "%03d.png",
+                        "-i", frameImagePath + "%03d"+commonArg.endSuffix,
                         "-pix_fmt", "yuv420p",
                         "-vcodec", "libx265",
                         "-b:v", commonArg.bitrate + "k",
@@ -346,7 +346,7 @@ public class AnimTool {
         } else {
             if (commonArg.enableCrf) {
                 cmd = new String[]{commonArg.ffmpegCmd, "-framerate", String.valueOf(commonArg.fps),
-                        "-i", frameImagePath + "%03d.png",
+                        "-i", frameImagePath + "%03d"+commonArg.endSuffix,
                         "-pix_fmt", "yuv420p",
                         "-vcodec", "libx264",
                         "-crf", Integer.toString(commonArg.crf),
@@ -357,7 +357,7 @@ public class AnimTool {
                         "-y", videoPath + TEMP_VIDEO_FILE};
             } else {
                 cmd = new String[]{commonArg.ffmpegCmd, "-framerate", String.valueOf(commonArg.fps),
-                        "-i", frameImagePath + "%03d.png",
+                        "-i", frameImagePath + "%03d"+ commonArg.endSuffix,
                         "-pix_fmt", "yuv420p",
                         "-vcodec", "libx264",
                         "-b:v", commonArg.bitrate + "k",

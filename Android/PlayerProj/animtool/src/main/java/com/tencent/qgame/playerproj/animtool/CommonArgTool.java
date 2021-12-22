@@ -91,9 +91,9 @@ class CommonArgTool {
         }
 
         // 检查第一帧
-        File firstFrame = new File(commonArg.inputPath + "000.png");
+        File firstFrame = new File(commonArg.inputPath + "000"+commonArg.endSuffix);
         if (!firstFrame.exists()) {
-            TLog.e(TAG, "first frame 000.png does not exist");
+            TLog.e(TAG, "first frame 000" + commonArg.endSuffix + " does not exist");
             return false;
         }
         // 获取视频高度
@@ -155,7 +155,7 @@ class CommonArgTool {
         // 获取总帧数
         commonArg.totalFrame = 0;
         for (int i=0; i<=999; i++) {
-            File frameFile = new File(commonArg.inputPath + String.format("%03d", i) + ".png");
+            File frameFile = new File(commonArg.inputPath + String.format("%03d", i) + commonArg.endSuffix);
             // 顺序检查
             if (!frameFile.exists()) {
                 break;
