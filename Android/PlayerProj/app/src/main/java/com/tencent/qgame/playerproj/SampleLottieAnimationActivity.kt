@@ -4,17 +4,18 @@ import android.Manifest
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Picture
+import android.content.Intent
+import android.graphics.*
 import android.os.*
 import android.util.Log
 import android.view.View
 import android.view.animation.LinearInterpolator
+import androidx.annotation.DrawableRes
 import androidx.annotation.WorkerThread
 import androidx.appcompat.app.AppCompatActivity
+import com.airbnb.lottie.ImageAssetDelegate
 import com.airbnb.lottie.LottieDrawable
+import com.airbnb.lottie.LottieImageAsset
 import com.blankj.utilcode.util.ImageUtils
 import com.coder.ffmpeg.annotation.CodecAttribute
 import com.coder.ffmpeg.call.IFFmpegCallBack
@@ -59,6 +60,19 @@ class SampleLottieAnimationActivity : AppCompatActivity() {
             requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE), 0x11)
         }
 
+        lottieViewBg.setImageAssetDelegate {
+            Log.d(TAG, "setImageAssetDelegate: $it")
+            when {
+                it.fileName == "img_0.jpg" || it.id == "image_0" -> {
+                    replaceImg(it.width, it.height, R.drawable.r_img_1)
+                }
+                it.fileName == "img_1.png" || it.id == "image_1" -> {
+                    replaceImg(it.width, it.height, R.drawable.r_img_2)
+                }
+                else -> null
+            }
+        }
+
         lottieViewBg.addLottieOnCompositionLoadedListener {
             duration = it.duration.toLong()
             frameRate = it.frameRate
@@ -80,9 +94,32 @@ class SampleLottieAnimationActivity : AppCompatActivity() {
         bind.btnFfmpegFormat.setOnClickListener { startLogFFmpegFormat() }
     }
 
+    private fun replaceImg(width: Int, height: Int, @DrawableRes resId: Int): Bitmap {
+        return BitmapFactory.decodeResource(resources, resId).let { src ->
+            Bitmap.createBitmap(width, height, src.config).apply {
+                val matrix = Matrix()
+                val scale: Float
+                var dx = 0f
+                var dy = 0f
+                if (src.width * height > width * src.height) {
+                    scale = height.toFloat() / src.height.toFloat()
+                    dx = (width - src.width * scale) * 0.5f
+                } else {
+                    scale = width.toFloat() / src.width.toFloat()
+                    dy = (height - src.height * scale) * 0.5f
+                }
+                matrix.setScale(scale, scale)
+                matrix.postTranslate(dx.roundToInt().toFloat(), dy.roundToInt().toFloat())
+                Canvas(this).drawBitmap(src, matrix, Paint(Paint.FILTER_BITMAP_FLAG))
+            }
+        }
+    }
+
     private fun startShow(duration: Long) {
+        bind.btnProcess.visibility = View.GONE
+        fgpictureArray.clear()
+        bgpictureArray.clear()
         File(cacheDir.absolutePath).deleteRecursively()
-        lottieViewBg.isDrawingCacheEnabled = true
         ValueAnimator.ofFloat(0f, 1f).setDuration(duration).apply {
             interpolator = LinearInterpolator()
             addUpdateListener {
@@ -105,6 +142,8 @@ class SampleLottieAnimationActivity : AppCompatActivity() {
             }
             addListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
+                    animation.removeAllListeners()
+                    (animation as ValueAnimator).removeAllUpdateListeners()
                     lottieViewBg.postOnAnimation { bind.btnProcess.visibility = View.VISIBLE }
                 }
             })
@@ -186,6 +225,11 @@ class SampleLottieAnimationActivity : AppCompatActivity() {
 
                 override fun onComplete() {
                     Log.d(TAG, "onComplete: ")
+                    runOnUiThread {
+                        val intent = Intent(this@SampleLottieAnimationActivity, SampleVideoViewActivity::class.java)
+                        intent.putExtra("video", "${this@SampleLottieAnimationActivity.cacheDir.absolutePath}/merge.mp4")
+                        this@SampleLottieAnimationActivity.startActivity(intent)
+                    }
                 }
 
                 override fun onError(errorCode: Int, errorMsg: String?) {

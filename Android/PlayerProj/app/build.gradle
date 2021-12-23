@@ -51,8 +51,12 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.4.0'
     implementation 'com.airbnb.android:lottie:4.2.2'
     implementation 'com.blankj:utilcodex:1.31.0'
+    implementation 'android.arch.lifecycle:extensions:1.1.1'
 
     implementation 'com.github.AnJoiner:FFmpegCommand:1.2.1-lite'
+    implementation 'com.google.android.material:material:1.4.0'
     // implementation 'com.github.AnJoiner:FFmpegCommand:1.2.1'
+
+    implementation project(':lottie_blend')
 
 }

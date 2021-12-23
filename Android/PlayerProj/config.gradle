@@ -1,0 +1,14 @@
+ext {
+    kotlin_version = '1.6.0'
+
+    dependencies = [
+            'ffmpeg_command_lite'    : 'com.github.AnJoiner:FFmpegCommand:1.2.1-lite',
+            'ffmpeg_command'    : 'com.github.AnJoiner:FFmpegCommand:1.2.1',
+            'lottie'            : 'com.airbnb.android:lottie:4.2.2',
+            'viewmodel_ktx'     : 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1',
+            'android.material'  : 'com.google.android.material:material:1.4.0',
+            'androidx.appcompat': 'androidx.appcompat:appcompat:1.4.0',
+            'core_ktx'          : 'androidx.core:core-ktx:1.6.0',
+            'utilcodex'         : 'com.blankj:utilcodex:1.31.0',
+    ]
+}

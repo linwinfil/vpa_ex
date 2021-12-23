@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="lottieBlendViewStyle" format="reference" />
+    <declare-styleable name="LottieBlendView">
+        <attr name="blend_fg_fileName" format="string" />
+        <attr name="blend_bg_fileName" format="string" />
+        <attr name="blend_fg_imageAssetsFolder" format="string" />
+        <attr name="blend_bg_imageAssetsFolder" format="string" />
+        <attr name="blend_show_lottie" format="boolean" />
+    </declare-styleable>
+</resources>

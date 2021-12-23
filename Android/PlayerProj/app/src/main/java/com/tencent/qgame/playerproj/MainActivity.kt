@@ -46,8 +46,11 @@ class MainActivity : Activity() {
         bind.btn5.setOnClickListener {
             startActivity(Intent(this, SampleLottieAnimationActivity::class.java))
         }
+        bind.btn6.setOnClickListener {
+            startActivity(Intent(this, SampleLottieBlendActivity::class.java))
+        }
 
-        bind.btn5.performClick()
+        bind.btn6.performClick()
     }
 
 
