@@ -3,10 +3,10 @@ package com.at.lottie
 import android.content.Context
 import android.graphics.Color
 import android.util.AttributeSet
+import android.util.Log
 import androidx.annotation.AttrRes
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.airbnb.lottie.LottieAnimationView
-import com.airbnb.lottie.LottieComposition
 
 /**
  * Created by linmaoxin on 2021/12/23
@@ -39,8 +39,7 @@ class LottieBlendView : ConstraintLayout, IBlend {
     private lateinit var lottieViewFg: LottieAnimationView
 
     private var initShowLottie = false
-
-    private var compositionBg: LottieComposition? = null
+    private var createdLottieFlag: Int = 0
 
     private fun init(attrs: AttributeSet?, @AttrRes defStyleAttr: Int) {
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.LottieBlendView, defStyleAttr, 0)
@@ -64,23 +63,34 @@ class LottieBlendView : ConstraintLayout, IBlend {
         lottieViewBg = LottieAnimationView(context).apply {
             layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
             addView(this)
-
             loop(false)
             visibility = if (initShowLottie) VISIBLE else INVISIBLE
-            addLottieOnCompositionLoadedListener { composition ->
-                compositionBg = composition
+            postOnAnimation {
+                createdLottieFlag = createdLottieFlag.or(1 shl 1)
+                Log.d(TAG, "lottie bg: ${this.width}*${this.height}")
             }
         }
         lottieViewFg = LottieAnimationView(context).apply {
             layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
             addView(this)
-
             loop(false)
             visibility = if (initShowLottie) VISIBLE else INVISIBLE
+            postOnAnimation {
+                createdLottieFlag = createdLottieFlag.or(1 shl 2)
+                Log.d(TAG, "lottie fg: ${this.width}*${this.height}")
+            }
         }
     }
 
     override fun initLottie() {
+        if (createdLottieFlag.and(1 shl 1) == 0 || createdLottieFlag.and(1 shl 2) == 0) {
+            postOnAnimation {
+                initLottie()
+            }
+            return
+        }
+        if (createdLottieFlag.and(1 shl 3) != 0) return
+        createdLottieFlag = createdLottieFlag.or(1 shl 3)
         lottieViewBg.apply {
             imageAssetsFolder = lottieBgImageAssetFolder
             setAnimation(lottieBgFileName)
@@ -91,10 +101,6 @@ class LottieBlendView : ConstraintLayout, IBlend {
         }
     }
 
-    override fun getDuration(): Float = compositionBg?.duration ?: 0.0f
-    override fun getFrameRate(): Float = compositionBg?.frameRate ?: 0f
-    override fun getEndFrame(): Float = compositionBg?.endFrame ?: 0f
-    override fun getStartFrame(): Float = compositionBg?.startFrame ?: 0f
     override fun getLottieViewBg(): LottieAnimationView = lottieViewBg
     override fun getLottieViewFg(): LottieAnimationView = lottieViewFg
 

@@ -8,6 +8,7 @@ import android.net.Uri
 import com.airbnb.lottie.*
 import com.airbnb.lottie.utils.Logger
 import com.airbnb.lottie.utils.Utils
+import com.at.lottie.ImageDelegate
 import com.at.lottie.utils.Utils.scaleBitmap
 import java.io.File
 import java.util.*
@@ -17,11 +18,6 @@ import kotlin.math.roundToInt
  * Created by linmaoxin on 2021/12/23
  */
 
-/**
- * @param fileName 对应内置素材名
- * @param res 待替换的素材，File、Path、Bitmap、Uri、Int
- */
-data class ImageDelegate(val fileName: String, val res: Any)
 
 class LottieOptions private constructor() {
     companion object {
