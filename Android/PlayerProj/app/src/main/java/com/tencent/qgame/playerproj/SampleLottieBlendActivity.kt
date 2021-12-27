@@ -6,11 +6,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.at.lottie.*
+import com.at.lottie.gpu.gl.RGBShiftFilter
+import com.at.lottie.gpu.gl.RainbowFilter
+import com.at.lottie.gpu.gl.ShakeFilter
 import com.tencent.qgame.playerproj.databinding.ActivitySampleLottieBlendBinding
-import com.tencent.qgame.playerproj.gl.RGBShiftFilter
-import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
-import okio.buffer
-import okio.source
 
 class SampleLottieBlendActivity : AppCompatActivity() {
     companion object {
@@ -32,8 +31,11 @@ class SampleLottieBlendActivity : AppCompatActivity() {
             model.addReplaceImageDelegate(ImageDelegate("img_0.jpg", R.drawable.r_img_1))
             model.addReplaceImageDelegate(ImageDelegate("img_1.png", R.drawable.r_img_2))
 
-            model.addFrameFilterDelegate(FrameFilter(0, 100,
-                RGBShiftFilter(GPUImageFilter.NO_FILTER_VERTEX_SHADER, resources.openRawResource(R.raw.rgb_shift_fragment).source().buffer().readUtf8())))
+            model.addFrameFilterDelegate(FrameFilter(0, 30, RGBShiftFilter()))
+            model.addFrameFilterDelegate(FrameFilter(31, 110, RainbowFilter()))
+            model.addFrameFilterDelegate(FrameFilter(64, 110, ShakeFilter()))
+
+            // model.addFrameFilterDelegate(FrameFilter(110, filter = RainbowFilter(), frameType = FrameType.Foreground))
 
             lottieBlendView.showLottieAnimationView()
             model.initLottie()
@@ -52,6 +54,9 @@ class SampleLottieBlendActivity : AppCompatActivity() {
                 }
                 else -> {}
             }
+        })
+        model.blendFramesLiveData.observe(this, Observer {
+            bind.ivPreview.setImageBitmap(it)
         })
         bind.btnStart.setOnClickListener {
             model.startFrameBlend()

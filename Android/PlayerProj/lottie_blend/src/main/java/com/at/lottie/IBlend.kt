@@ -3,7 +3,10 @@ package com.at.lottie
 import android.os.Handler
 import android.os.HandlerThread
 import com.airbnb.lottie.LottieAnimationView
+import com.at.lottie.gpu.GPUImageRendererImpl
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
+import java.lang.IllegalArgumentException
+import java.lang.IllegalStateException
 
 /**
  * Created by linmaoxin on 2021/12/23
@@ -15,24 +18,59 @@ interface IBlend {
 }
 
 interface IFilter {
-    fun doFrame(startFrame: Int, endFrame: Int, frame: Int)
+
+    /** 获取真实 filter */
+    fun getFilter(): GPUImageFilter
+
+    /** 是否能绘制 */
+    fun isEnableDraw(): Boolean
+
+    /** 设置能否绘制 */
+    fun setEnableDraw(enable: Boolean)
+
+    /**
+     * @param startFrame 起始帧
+     * @param endFrame 结束帧
+     * @param frame 当前帧
+     * @param index 当前下标
+     */
+    fun doFrame(startFrame: Int, endFrame: Int, frame: Int, index: Int)
 }
 
-sealed class Frame()
+enum class FrameType {
+    Background, Foreground
+}
+
 
 /**
  * 对指定帧序做滤镜处理
- * @param startFrame 起始帧序
- * @param endFrame 结束帧序
+ * @param startFrame 起始帧序 默认0起始
+ * @param endFrame 结束帧序  默认-1结束
  * @param filter 滤镜
- * @param isBgFrame 是否是背景帧
+ * @param frameType [FrameType.Background],[FrameType.Foreground]
  */
-class FrameFilter(val startFrame: Int, val endFrame: Int, val filter: GPUImageFilter, val isBgFrame: Boolean = true) : Frame() {
-    fun inFrameRange(frame: Int) = frame in startFrame..endFrame
-    fun doFrame(frame: Int) {
+class FrameFilter(private val startFrame: Int = 0, private val endFrame: Int = -1,
+                  val filter: IFilter, val frameType: FrameType = FrameType.Background) {
+    fun inRange(frame: FramePicture): Boolean {
+        checkArgs()
+        if (frameType != frame.type) return false
+        return startFrame <= frame.frameIndex && (endFrame == -1 || frame.frameIndex <= endFrame)
+    }
 
+    fun doFrame(frame: FramePicture, index: Int) {
+        filter.doFrame(startFrame, endFrame, frame.frameIndex, index)
+    }
+    internal fun checkArgs() {
+        if (endFrame in 0 until startFrame) throw IllegalArgumentException("start frame must < end frame!")
+        if (startFrame < 0) throw IllegalArgumentException("start frame must >= 0")
     }
 }
+
+/**
+ * 背景音频
+ * @param path Uri、String、File
+ */
+class AudioDelegate(path: Any)
 
 /**
  * @param fileName 对应内置素材名

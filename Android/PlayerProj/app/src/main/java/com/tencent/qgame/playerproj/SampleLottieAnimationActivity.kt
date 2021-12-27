@@ -13,20 +13,14 @@ import android.view.animation.LinearInterpolator
 import androidx.annotation.DrawableRes
 import androidx.annotation.WorkerThread
 import androidx.appcompat.app.AppCompatActivity
-import com.airbnb.lottie.ImageAssetDelegate
-import com.airbnb.lottie.LottieDrawable
-import com.airbnb.lottie.LottieImageAsset
 import com.blankj.utilcode.util.ImageUtils
 import com.coder.ffmpeg.annotation.CodecAttribute
 import com.coder.ffmpeg.call.IFFmpegCallBack
 import com.coder.ffmpeg.jni.FFmpegCommand
 import com.tencent.qgame.playerproj.databinding.ActivitySampleLottieAnimationBinding
-import com.tencent.qgame.playerproj.gl.RGBShiftFilter
+import com.at.lottie.gpu.gl.RGBShiftFilter
 import jp.co.cyberagent.android.gpuimage.GPUImageRenderer
 import jp.co.cyberagent.android.gpuimage.PixelBuffer
-import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
-import okio.buffer
-import okio.source
 import java.io.File
 import kotlin.math.roundToInt
 
@@ -163,8 +157,7 @@ class SampleLottieAnimationActivity : AppCompatActivity() {
 
             val times = SystemClock.elapsedRealtime()
             val pixelBuffer = PixelBuffer(width, height)
-            val filter = RGBShiftFilter(GPUImageFilter.NO_FILTER_VERTEX_SHADER,
-                this@SampleLottieAnimationActivity.resources.openRawResource(R.raw.rgb_shift_fragment).source().buffer().readUtf8())
+            val filter = RGBShiftFilter()
             val renderer = GPUImageRenderer(filter)
             var count = 0
             val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)

@@ -1,0 +1,30 @@
+{
+    "bg"://背景，必选
+    {
+        "data": "bg/data.json", //背景动画json，必选
+        "images": "bg/images",  //背景动画占位素材，必选
+        "filter"://滤镜帧可选
+        [
+            {
+                "id": 0,        //滤镜id
+                "start": 0,     //起始帧
+                "end": 100      //结束帧，-1为全局结束
+                
+            },
+            {
+                "start": 101,
+                "end": -1,
+                "id": 1
+            }
+        ]
+    },
+    "fg"://可选
+    {
+        "data": "fg/data.json", //前景动画json
+        "images": "fg/images"   //前景动画序列帧图
+    },
+    "audio"://融合音频，可选
+    {
+        "data": "audio.mp3"     
+    }
+}

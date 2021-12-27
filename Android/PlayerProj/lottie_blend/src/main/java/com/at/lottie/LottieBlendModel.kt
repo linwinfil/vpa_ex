@@ -7,7 +7,7 @@ import android.app.Application
 import android.graphics.*
 import android.net.Uri
 import android.os.SystemClock
-import android.util.Log
+import android.util.Size
 import android.view.View
 import android.view.animation.LinearInterpolator
 import androidx.lifecycle.AndroidViewModel
@@ -15,11 +15,15 @@ import androidx.lifecycle.MutableLiveData
 import com.airbnb.lottie.ImageAssetDelegate
 import com.airbnb.lottie.LottieAnimationView
 import com.airbnb.lottie.LottieComposition
+import com.at.lottie.gpu.GPUImageFilterGroupImpl
+import com.at.lottie.gpu.GPUImageRendererImpl
+import com.at.lottie.gpu.PixelBufferImpl
 import com.at.lottie.utils.Utils
+import com.at.lottie.utils.logd
+import com.at.lottie.utils.logi
 import com.blankj.utilcode.util.ImageUtils
 import com.coder.ffmpeg.call.IFFmpegCallBack
 import com.coder.ffmpeg.jni.FFmpegCommand
-import jp.co.cyberagent.android.gpuimage.PixelBuffer
 import java.io.File
 import kotlin.math.max
 import kotlin.math.min
@@ -29,20 +33,21 @@ import kotlin.math.roundToInt
  * Created by linmaoxin on 2021/12/23
  */
 
-class FramePicture(val frameIndex: Int, val isBg: Boolean) {
+class FramePicture(val frameIndex: Int, val type: FrameType) {
     private val picture = Picture()
     val width: Int get() = picture.width
     val height: Int get() = picture.height
     fun drawTo(canvas: Canvas) = picture.draw(canvas)
     fun drawOn(view: View) {
-        val canvas = picture.beginRecording(width, height)
-        canvas.drawColor(Color.TRANSPARENT)
+        val canvas = picture.beginRecording(view.width, view.height)
+        canvas.clear()
         view.draw(canvas)
         picture.endRecording()
     }
 
 }
 
+internal fun Canvas.clear() = drawColor(0, PorterDuff.Mode.CLEAR);
 class LottieBlendModel(application: Application) : AndroidViewModel(application) {
     companion object {
         private const val TAG = "${Constant.TAG}.BlendModel"
@@ -56,13 +61,17 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
     /** 序列帧合并视频 */
     val mergeFramesLiveData by lazy { MutableLiveData<BlendState>() }
 
+    /** 序列帧混合 */
+    val blendFramesLiveData by lazy { MutableLiveData<Bitmap>() }
+
     /** 序列帧质量[30-100]*/
     val frameJpgQuality: Int = 100
         get() = max(min(100, field), 30)
 
-    var dstWidth: Int = -1
-    var dstHeight: Int = -1
+    private var outPutSize = Size(-1, -1)
+    fun setOutputSize(size: Size) = apply { outPutSize = size }
 
+    private fun Size.isDefault() = width == -1 && height == -1
 
     private val cacheFile = File(application.cacheDir, "lottie_seq_images")
     private val outputPath = "${application.cacheDir.absolutePath}/merge.mp4"
@@ -101,8 +110,8 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
 
     private var animator: ValueAnimator? = null
 
-    private val decodeThread: HandlerHolder by lazy {
-        HandlerHolder(null, null).apply { createThread("lottie_frame_thread") }
+    private val blendThread: HandlerHolder by lazy {
+        HandlerHolder(null, null).apply { createThread("blen_frame_thread") }
     }
 
     private val imageDelegates by lazy { mutableListOf<ImageDelegate>() }
@@ -118,45 +127,80 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
     }
 
     private val frameFilterDelegates by lazy { mutableListOf<FrameFilter>() }
-    private fun findFilterDelegate(frameIndex: Int, isBg: Boolean): FrameFilter? = frameFilterDelegates.find { it.inFrameRange(frameIndex) && it.isBgFrame == isBg }
 
+
+    private val audioDelegate by lazy { mutableListOf<AudioDelegate>() }
 
     // @WorkerThread
-    private val decodeFramesRunnable = Runnable {
+    private val blendFramesRunnable = Runnable {
+        if (pictureBgArr.isNullOrEmpty()) {
+            return@Runnable
+        }
+        logi(TAG, "bg frames:${pictureBgArr.size}, fg frames:${pictureFgArr.size}")
         val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
         val allTimes = SystemClock.elapsedRealtime()
+        val dstSize = if (outPutSize.isDefault()) Size(pictureBgArr[0].width, pictureBgArr[0].height) else Size(outPutSize.width, outPutSize.height)
+        var bgPixelBuffer: PixelBufferImpl? = null
+        val filterGroup: GPUImageFilterGroupImpl? by lazy {
+            frameFilterDelegates.mapNotNull { f -> if (f.frameType == FrameType.Background) f.filter else null }
+                .takeUnless { it.isNullOrEmpty() }?.let { GPUImageFilterGroupImpl(it) }
+        }
+        val bgGpuRenderer: GPUImageRendererImpl? by lazy {
+            filterGroup?.let { GPUImageRendererImpl(it) }
+        }
 
-        val pixelBuffer by lazy { PixelBuffer() }
+        var doFrameFilter: Boolean = false
         pictureBgArr.forEachIndexed { index, bgPicture ->
             val elapsed = SystemClock.elapsedRealtime()
-
             //draw background
             val bgBitmap = Bitmap.createBitmap(bgPicture.width, bgPicture.height, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(bgBitmap)
-            bgPicture.drawTo(canvas)
+            val bgCanvas = Canvas(bgBitmap)
+            bgPicture.drawTo(bgCanvas)
 
-            findFilterDelegate(bgPicture.frameIndex, true)?.also {
-                it.doFrame(bgPicture.frameIndex)
+            doFrameFilter = false
+            frameFilterDelegates.forEach { frameFilter ->
+                filterGroup?.getFilters()?.find { iFilter -> iFilter == frameFilter.filter }?.also { iFilter->
+                    val inRange = frameFilter.inRange(bgPicture)
+                    iFilter.setEnableDraw(inRange)
+                    if (inRange) {
+                        frameFilter.doFrame(bgPicture, index)
+                        doFrameFilter = true
+                    }
+                }
             }
-
-            // do something filter
-            //todo lmx
-
+            if (doFrameFilter) {
+                bgGpuRenderer?.also { render ->
+                    bgPixelBuffer = bgPixelBuffer ?: run { PixelBufferImpl(dstSize.width, dstSize.height) }
+                    bgPixelBuffer?.also { buffer ->
+                        render.setImageBitmap(bgBitmap, false)
+                        buffer.setRenderer(render)
+                        buffer.clearBitmap()
+                        buffer.getBitmap()?.also { newBitmap ->
+                            bgCanvas.clear() //清除掉原来的
+                            bgCanvas.drawBitmap(newBitmap, 0f, 0f, paint)
+                        }
+                    }
+                }
+            }
             //draw foreground
-            val fgIndex = if (index >= pictureFgArr.size) pictureFgArr.size - 1 else index
-            val fgPicture = pictureFgArr[fgIndex]
-            val fgBitmap = Bitmap.createBitmap(fgPicture.width, fgPicture.height, Bitmap.Config.ARGB_8888).apply {
-                fgPicture.drawTo(Canvas(this))
-            }
-            canvas.drawBitmap(fgBitmap, 0f, 0f, paint)
+
+            val fgPicture = pictureFgArr[if (index >= pictureFgArr.size) pictureFgArr.size - 1 else index]
+            //绘制到前景画板后再绘制到背景画板
+            val fgBitmap = Bitmap.createBitmap(fgPicture.width, fgPicture.height, Bitmap.Config.ARGB_8888)
+            val fgCanvas = Canvas(fgBitmap)
+            fgPicture.drawTo(fgCanvas)
+            //blend foreground and background
+            bgCanvas.drawBitmap(fgBitmap, 0f, 0f, paint)
 
             //save sequence image to cache dir
             val path = "${cacheFile.absolutePath}/${String.format("%03d", index)}.jpg"
-            val save = ImageUtils.save(bgBitmap, path,
-                Bitmap.CompressFormat.JPEG, frameJpgQuality, true)
-            Log.d(TAG, "decode frame:$index -> $save, ${SystemClock.elapsedRealtime() - elapsed}")
+            val save = ImageUtils.save(bgBitmap, path, Bitmap.CompressFormat.JPEG, frameJpgQuality, false)
+            logd(TAG, "blend frame:$index -> $save, ${SystemClock.elapsedRealtime() - elapsed}ms")
+            blendFramesLiveData.postValue(bgBitmap)
         }
-        Log.d(TAG, "decode frame: ${SystemClock.elapsedRealtime() - allTimes}")
+        logd(TAG, "blend frame: ${SystemClock.elapsedRealtime() - allTimes}ms")
+        bgPixelBuffer?.destroy()
+        System.gc()
         startMergeFramesStep()
     }
 
@@ -164,7 +208,7 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
     private val mergeFramesRunnable = Runnable {
         System.gc()
         val realFrameRate = (pictureBgArr.size.toFloat() / frameCount * frameRate).roundToInt()
-        Log.d(TAG, "merge frame rate:$realFrameRate")
+        logd(TAG, "merge frame rate:$realFrameRate")
 
         //crf 0(无损) - 50(最大压缩)
         val cmdArgs: Array<String?> = arrayOf(
@@ -182,30 +226,32 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
             // "-bufsize", "2000k",
             "-y", outputPath,
         )
+
+        //todo lmx 合并音频文件
         FFmpegCommand.runCmd(cmdArgs, object : IFFmpegCallBack {
             override fun onCancel() {
                 mergeFramesLiveData.postValue(OnCancel)
-                Log.d(TAG, "onCancel: ")
+                logd(TAG, "onCancel: ")
             }
 
             override fun onComplete() {
                 mergeFramesLiveData.postValue(OnComplete(outputPath))
-                Log.d(TAG, "onComplete: ")
+                logd(TAG, "onComplete: ")
             }
 
             override fun onError(errorCode: Int, errorMsg: String?) {
                 mergeFramesLiveData.postValue(OnError(errorCode, errorMsg))
-                Log.d(TAG, "onError: $errorCode, $errorMsg")
+                logd(TAG, "onError: $errorCode, $errorMsg")
             }
 
             override fun onProgress(progress: Int, pts: Long) {
                 mergeFramesLiveData.postValue(OnProgress(progress, pts))
-                Log.d(TAG, "onProgress: $progress, $pts")
+                logd(TAG, "onProgress: $progress, $pts")
             }
 
             override fun onStart() {
                 mergeFramesLiveData.postValue(OnStart)
-                Log.d(TAG, "onStart: ")
+                logd(TAG, "onStart: ")
             }
         })
     }
@@ -217,7 +263,14 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
     }
 
     fun addReplaceImageDelegate(delegate: ImageDelegate) = apply { imageDelegates.add(delegate) }
-    fun addFrameFilterDelegate(filter: FrameFilter) = apply { frameFilterDelegates.add(filter) }
+    fun addFrameFilterDelegate(filter: FrameFilter) = apply {
+        filter.apply {
+            checkArgs()
+            frameFilterDelegates.add(filter)
+        }
+    }
+
+    fun addVideoAudioDelegate(delegate: AudioDelegate) = apply { audioDelegate.add(delegate) }
 
     fun initLottie() {
         lottieViewBg.apply {
@@ -261,9 +314,9 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
                 lottieViewFg.progress = value
                 val frameBg = lottieViewBg.frame
                 val frameFg = lottieViewFg.frame
-                pictureBgArr.add(FramePicture(frameBg, true).apply { drawOn(lottieViewBg) })
-                pictureFgArr.add(FramePicture(frameFg, false).apply { drawOn(lottieViewFg) })
-                Log.d(TAG, "onCreate: add picture ${++times} bgFrame:$frameBg, fgFrame:$frameFg, sync times:${SystemClock.elapsedRealtime() - elapseT}")
+                pictureBgArr.add(FramePicture(frameBg, FrameType.Background).apply { drawOn(lottieViewBg) })
+                pictureFgArr.add(FramePicture(frameFg, FrameType.Foreground).apply { drawOn(lottieViewFg) })
+                logd(TAG, "onCreate: add picture ${++times} bgFrame:$frameBg, fgFrame:$frameFg, sync times:${SystemClock.elapsedRealtime() - elapseT}ms")
                 scanFramesLiveData.postValue(lottieViewBg.frame)
             }
             addListener(object : AnimatorListenerAdapter() {
@@ -283,19 +336,19 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
                     (animation as ValueAnimator).removeAllUpdateListeners()
                     animator = null
                     isScanningFrame = false
-                    startDecodeFramesStep()
+                    startBlendFramesStep()
                 }
             })
             start()
         }
     }
 
-    private fun startDecodeFramesStep() {
-        decodeThread.handler?.post(decodeFramesRunnable)
+    private fun startBlendFramesStep() {
+        blendThread.handler?.post(blendFramesRunnable)
     }
 
     private fun startMergeFramesStep() {
-        decodeThread.handler?.post(mergeFramesRunnable)
+        blendThread.handler?.post(mergeFramesRunnable)
     }
 
 }
