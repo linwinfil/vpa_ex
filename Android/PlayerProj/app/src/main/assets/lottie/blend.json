@@ -3,7 +3,7 @@
     {
         "data": "bg/data.json", //背景动画json，必选
         "images": "bg/images",  //背景动画占位素材，必选
-        "filter"://滤镜帧可选
+        "filters"://滤镜帧可选
         [
             {
                 "id": 0,        //滤镜id

@@ -18,7 +18,7 @@ import com.airbnb.lottie.LottieComposition
 import com.at.lottie.gpu.GPUImageFilterGroupImpl
 import com.at.lottie.gpu.GPUImageRendererImpl
 import com.at.lottie.gpu.PixelBufferImpl
-import com.at.lottie.utils.Utils
+import com.at.lottie.utils.BlendUtils
 import com.at.lottie.utils.logd
 import com.at.lottie.utils.logi
 import com.blankj.utilcode.util.ImageUtils
@@ -47,10 +47,14 @@ class FramePicture(val frameIndex: Int, val type: FrameType) {
 
 }
 
-internal fun Canvas.clear() = drawColor(0, PorterDuff.Mode.CLEAR);
+internal fun Canvas.clear() = drawColor(0, PorterDuff.Mode.CLEAR)
+
 class LottieBlendModel(application: Application) : AndroidViewModel(application) {
     companion object {
         private const val TAG = "${Constant.TAG}.BlendModel"
+        private const val STEP_DRAW_1 = 1
+        private const val STEP_FILTER_2 = 1 shl 1
+        private const val STEP_MERGE_3 = 1 shl 2
     }
 
     lateinit var blend: IBlend
@@ -64,14 +68,14 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
     /** 序列帧混合 */
     val blendFramesLiveData by lazy { MutableLiveData<Bitmap>() }
 
+    /** 执行进度  */
+    val progressLiveData by lazy { MutableLiveData<Int>() }
+
     /** 序列帧质量[30-100]*/
     val frameJpgQuality: Int = 100
         get() = max(min(100, field), 30)
 
-    private var outPutSize = Size(-1, -1)
-    fun setOutputSize(size: Size) = apply { outPutSize = size }
-
-    private fun Size.isDefault() = width == -1 && height == -1
+    private var outPutSize:Int = -1
 
     private val cacheFile = File(application.cacheDir, "lottie_seq_images")
     private val outputPath = "${application.cacheDir.absolutePath}/merge.mp4"
@@ -119,7 +123,7 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
         ImageAssetDelegate { asset ->
             imageDelegates.find { it.fileName == asset.fileName }?.let { imageAsset ->
                 when (val res = imageAsset.res) {
-                    is Bitmap, is String, is File, is Uri, is Int -> Utils.scaleBitmap(application, asset.width, asset.height, res)
+                    is Bitmap, is String, is File, is Uri, is Int -> BlendUtils.scaleBitmap(application, asset.width, asset.height, res)
                     else -> null
                 }
             }
@@ -127,19 +131,33 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
     }
 
     private val frameFilterDelegates by lazy { mutableListOf<FrameFilter>() }
-
-
     private val audioDelegate by lazy { mutableListOf<AudioDelegate>() }
+
+    //20-50-30
+    private fun postProgress(step: Int, progress: Int) {
+        val lastProgress = progressLiveData.value ?: 0
+        val fact = progress.toFloat() / 100
+        val posProgress: Int = when (step) {
+            STEP_DRAW_1 -> 0 + (20 * fact).roundToInt()
+            STEP_FILTER_2 -> 20 + (50 * fact).roundToInt()
+            STEP_MERGE_3 -> 70 + (30 * fact).roundToInt()
+            else -> lastProgress
+        }
+        progressLiveData.postValue(posProgress)
+    }
+
 
     // @WorkerThread
     private val blendFramesRunnable = Runnable {
         if (pictureBgArr.isNullOrEmpty()) {
             return@Runnable
         }
-        logi(TAG, "bg frames:${pictureBgArr.size}, fg frames:${pictureFgArr.size}")
+        val bgSize = pictureBgArr.size
+        val fgSize = pictureFgArr.size
+        logi(TAG, "bg frames:$bgSize, fg frames:$fgSize")
         val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
         val allTimes = SystemClock.elapsedRealtime()
-        val dstSize = if (outPutSize.isDefault()) Size(pictureBgArr[0].width, pictureBgArr[0].height) else Size(outPutSize.width, outPutSize.height)
+        val dstSize = Size(pictureBgArr[0].width, pictureBgArr[0].height)
         var bgPixelBuffer: PixelBufferImpl? = null
         val filterGroup: GPUImageFilterGroupImpl? by lazy {
             frameFilterDelegates.mapNotNull { f -> if (f.frameType == FrameType.Background) f.filter else null }
@@ -197,9 +215,11 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
             val save = ImageUtils.save(bgBitmap, path, Bitmap.CompressFormat.JPEG, frameJpgQuality, false)
             logd(TAG, "blend frame:$index -> $save, ${SystemClock.elapsedRealtime() - elapsed}ms")
             blendFramesLiveData.postValue(bgBitmap)
+            postProgress(STEP_FILTER_2, (index.toFloat() / bgSize * 100).roundToInt())
         }
         logd(TAG, "blend frame: ${SystemClock.elapsedRealtime() - allTimes}ms")
         bgPixelBuffer?.destroy()
+        filterGroup?.onDestroy()
         System.gc()
         startMergeFramesStep()
     }
@@ -246,6 +266,7 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
 
             override fun onProgress(progress: Int, pts: Long) {
                 mergeFramesLiveData.postValue(OnProgress(progress, pts))
+                postProgress(STEP_MERGE_3, progress)
                 logd(TAG, "onProgress: $progress, $pts")
             }
 
@@ -318,6 +339,7 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
                 pictureFgArr.add(FramePicture(frameFg, FrameType.Foreground).apply { drawOn(lottieViewFg) })
                 logd(TAG, "onCreate: add picture ${++times} bgFrame:$frameBg, fgFrame:$frameFg, sync times:${SystemClock.elapsedRealtime() - elapseT}ms")
                 scanFramesLiveData.postValue(lottieViewBg.frame)
+                postProgress(STEP_DRAW_1, (value * 100).roundToInt())
             }
             addListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationStart(animation: Animator) {

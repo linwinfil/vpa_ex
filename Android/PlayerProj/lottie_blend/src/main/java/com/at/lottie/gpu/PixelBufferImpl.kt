@@ -67,6 +67,8 @@ class PixelBufferImpl(private val width: Int, private val height: Int) {
         egl10.eglDestroySurface(eglDisplay, eglSurface)
         egl10.eglDestroyContext(eglDisplay, eglContext)
         egl10.eglTerminate(eglDisplay)
+        bitmap?.recycle()
+        bitmap = null
     }
 
     private fun chooseConfig(): EGLConfig? {

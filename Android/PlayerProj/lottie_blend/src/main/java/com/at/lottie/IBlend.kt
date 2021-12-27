@@ -2,15 +2,41 @@ package com.at.lottie
 
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.Parcelable
 import com.airbnb.lottie.LottieAnimationView
-import com.at.lottie.gpu.GPUImageRendererImpl
+import com.google.gson.annotations.SerializedName
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
-import java.lang.IllegalArgumentException
-import java.lang.IllegalStateException
+import java.io.Serializable
 
 /**
  * Created by linmaoxin on 2021/12/23
  */
+
+// ====================================== //
+interface IData : Serializable, Cloneable
+class Blend : IData {
+    @SerializedName("bg") var bg: Ground? = null
+    @SerializedName("fg") var fg: Ground? = null
+    @SerializedName("audio") var audio: Audio? = null
+}
+
+class Audio : IData {
+    @SerializedName("data") var data: String = ""
+}
+
+class Ground : IData {
+    @SerializedName("data") var data: String = ""
+    @SerializedName("images") var images: String = ""
+    @SerializedName("filters") var filters: List<Filter?>? = null
+}
+
+class Filter : IData {
+    @SerializedName("id") var id: Int = 0
+    @SerializedName("start") var start: Int = 0
+    @SerializedName("end" )var end: Int = -1
+}
+// ====================================== //
+
 interface IBlend {
     fun initLottie()
     fun getLottieViewBg(): LottieAnimationView
@@ -49,8 +75,10 @@ enum class FrameType {
  * @param filter 滤镜
  * @param frameType [FrameType.Background],[FrameType.Foreground]
  */
-class FrameFilter(private val startFrame: Int = 0, private val endFrame: Int = -1,
-                  val filter: IFilter, val frameType: FrameType = FrameType.Background) {
+class FrameFilter(
+    private val startFrame: Int = 0, private val endFrame: Int = -1,
+    val filter: IFilter, val frameType: FrameType = FrameType.Background
+) {
     fun inRange(frame: FramePicture): Boolean {
         checkArgs()
         if (frameType != frame.type) return false
@@ -60,6 +88,7 @@ class FrameFilter(private val startFrame: Int = 0, private val endFrame: Int = -
     fun doFrame(frame: FramePicture, index: Int) {
         filter.doFrame(startFrame, endFrame, frame.frameIndex, index)
     }
+
     internal fun checkArgs() {
         if (endFrame in 0 until startFrame) throw IllegalArgumentException("start frame must < end frame!")
         if (startFrame < 0) throw IllegalArgumentException("start frame must >= 0")

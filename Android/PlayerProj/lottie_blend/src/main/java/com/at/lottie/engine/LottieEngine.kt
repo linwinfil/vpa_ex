@@ -9,10 +9,9 @@ import com.airbnb.lottie.*
 import com.airbnb.lottie.utils.Logger
 import com.airbnb.lottie.utils.Utils
 import com.at.lottie.ImageDelegate
-import com.at.lottie.utils.Utils.scaleBitmap
+import com.at.lottie.utils.BlendUtils.scaleBitmap
 import java.io.File
 import java.util.*
-import kotlin.math.roundToInt
 
 /**
  * Created by linmaoxin on 2021/12/23

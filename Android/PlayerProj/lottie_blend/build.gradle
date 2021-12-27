@@ -39,6 +39,7 @@ dependencies {
     implementation rootProject.ext.dependencies['viewmodel_ktx']
     implementation rootProject.ext.dependencies['utilcodex']
     implementation rootProject.ext.dependencies['ffmpeg_command_lite']
+    implementation rootProject.ext.dependencies['gson']
     api 'jp.co.cyberagent.android:gpuimage:2.1.0'
 
 }
