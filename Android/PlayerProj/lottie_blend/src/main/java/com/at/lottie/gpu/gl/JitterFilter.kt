@@ -6,6 +6,7 @@ import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
 class JitterFilter : BaseGlitchFilter(FRAGMENT_SHADER), IGlitch {
     private var amountUniform = 0
     private var speedUniform = 0
+
     override fun onInit() {
         super.onInit()
         amountUniform = GLES20.glGetUniformLocation(program, "amount")
@@ -33,7 +34,8 @@ class JitterFilter : BaseGlitchFilter(FRAGMENT_SHADER), IGlitch {
     }
 
     override fun doFrame(startFrame: Int, endFrame: Int, frame: Int, index: Int) {
-
+        setIntensity(intensity)
+        setTime(calculateTimes(frame))
     }
 
     companion object {

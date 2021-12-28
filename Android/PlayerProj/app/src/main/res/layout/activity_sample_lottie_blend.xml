@@ -11,10 +11,6 @@
         android:id="@+id/lottie_view"
         android:layout_width="300dp"
         android:layout_height="0dp"
-        app:blend_bg_fileName="lottie/bg/data.json"
-        app:blend_bg_imageAssetsFolder="lottie/bg/images"
-        app:blend_fg_fileName="lottie/fg/data.json"
-        app:blend_fg_imageAssetsFolder="lottie/fg/images"
         app:blend_show_lottie="false"
         app:layout_constraintDimensionRatio="654:756"
         app:layout_constraintEnd_toEndOf="parent"
@@ -23,12 +19,12 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/iv_preview"
-        app:layout_constraintTop_toBottomOf="@id/lottie_view"
-        app:layout_constraintStart_toStartOf="@id/lottie_view"
-        app:layout_constraintEnd_toEndOf="@id/lottie_view"
-        app:layout_constraintDimensionRatio="654:756"
         android:layout_width="300dp"
-        android:layout_height="0dp"/>
+        android:layout_height="0dp"
+        app:layout_constraintDimensionRatio="654:756"
+        app:layout_constraintEnd_toEndOf="@id/lottie_view"
+        app:layout_constraintStart_toStartOf="@id/lottie_view"
+        app:layout_constraintTop_toBottomOf="@id/lottie_view" />
 
 
     <androidx.appcompat.widget.AppCompatButton
@@ -40,5 +36,32 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         tools:ignore="HardcodedText" />
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_play_video"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="play merge video"
+        android:textAllCaps="false"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/btn_start"
+        tools:ignore="HardcodedText" />
 
+    <ProgressBar
+        android:progressDrawable="@drawable/circular_progress_bar_drawable"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layoutDirection="ltr"
+        android:id="@+id/progress_circular"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:indeterminate="false"
+        android:max="100"
+        android:rotation="-90"
+        android:secondaryProgressTint="#66FFFFFF"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="parent"
+        tools:progress="30" />
 </androidx.constraintlayout.widget.ConstraintLayout>

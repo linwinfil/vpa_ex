@@ -4,6 +4,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.Parcelable
 import com.airbnb.lottie.LottieAnimationView
+import com.at.lottie.gpu.GpuFilters
 import com.google.gson.annotations.SerializedName
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
 import java.io.Serializable
@@ -18,6 +19,9 @@ class Blend : IData {
     @SerializedName("bg") var bg: Ground? = null
     @SerializedName("fg") var fg: Ground? = null
     @SerializedName("audio") var audio: Audio? = null
+
+    fun toBgFrameFilters(): List<FrameFilter>? = bg?.toFrameFilters()
+    fun toAudioDelegate(): AudioDelegate? = audio?.data.takeUnless { it.isNullOrEmpty() }?.let { AudioDelegate(it) }
 }
 
 class Audio : IData {
@@ -28,12 +32,18 @@ class Ground : IData {
     @SerializedName("data") var data: String = ""
     @SerializedName("images") var images: String = ""
     @SerializedName("filters") var filters: List<Filter?>? = null
+
+    fun toFrameFilters():List<FrameFilter>? = filters?.mapNotNull { it?.toFrameFilter() }
 }
 
 class Filter : IData {
     @SerializedName("id") var id: Int = 0
     @SerializedName("start") var start: Int = 0
     @SerializedName("end" )var end: Int = -1
+
+    fun toFrameFilter(): FrameFilter? = GpuFilters.getGpuFilter(id)?.run {
+        FrameFilter(start, end, this)
+    }
 }
 // ====================================== //
 
@@ -41,6 +51,8 @@ interface IBlend {
     fun initLottie()
     fun getLottieViewBg(): LottieAnimationView
     fun getLottieViewFg(): LottieAnimationView
+
+    fun setAssetFile(fileName: String, imageAssetFolder: String, type: FrameType)
 }
 
 interface IFilter {
@@ -58,7 +70,7 @@ interface IFilter {
      * @param startFrame 起始帧
      * @param endFrame 结束帧
      * @param frame 当前帧
-     * @param index 当前下标
+     * @param index 当前帧下标
      */
     fun doFrame(startFrame: Int, endFrame: Int, frame: Int, index: Int)
 }
@@ -97,9 +109,9 @@ class FrameFilter(
 
 /**
  * 背景音频
- * @param path Uri、String、File
+ * @param path String、File
  */
-class AudioDelegate(path: Any)
+class AudioDelegate(val path: Any)
 
 /**
  * @param fileName 对应内置素材名

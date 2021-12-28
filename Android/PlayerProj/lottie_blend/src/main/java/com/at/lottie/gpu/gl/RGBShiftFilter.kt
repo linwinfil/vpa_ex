@@ -24,7 +24,6 @@ class RGBShiftFilter : BaseGlitchFilter(FRAGMENT_SHADER), IFilter {
 
     private var amountUniform = 0
     private var angleUniform = 0
-    private var intensity = 0.2f
     override fun onInit() {
         super.onInit()
         amountUniform = GLES20.glGetUniformLocation(program, "u_amount")
@@ -52,7 +51,7 @@ class RGBShiftFilter : BaseGlitchFilter(FRAGMENT_SHADER), IFilter {
 
     override fun doFrame(startFrame: Int, endFrame: Int, frame: Int, index: Int) {
         setIntensity(intensity)
-        setTime(++count * 0.0167f * 0.5f)
+        setTime(calculateTimes(frame))
     }
 
     override fun getFilter(): GPUImageFilter = this

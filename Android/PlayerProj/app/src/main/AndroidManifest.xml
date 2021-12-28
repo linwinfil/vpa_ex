@@ -11,7 +11,11 @@
         android:label="@string/app_name"
         android:requestLegacyExternalStorage="true"
         android:supportsRtl="true"
+        android:largeHeap="true"
         android:theme="@style/AppTheme">
+        <activity
+            android:name=".SampleMaskColorActivity"
+            android:exported="false" />
         <activity
             android:name=".SampleLottieBlendActivity"
             android:exported="false" />

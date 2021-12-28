@@ -19,8 +19,15 @@ import com.coder.ffmpeg.call.IFFmpegCallBack
 import com.coder.ffmpeg.jni.FFmpegCommand
 import com.tencent.qgame.playerproj.databinding.ActivitySampleLottieAnimationBinding
 import com.at.lottie.gpu.gl.RGBShiftFilter
+import com.at.lottie.utils.append
+import com.at.lottie.utils.logd
+import com.coder.ffmpeg.utils.FFmpegUtils
 import jp.co.cyberagent.android.gpuimage.GPUImageRenderer
 import jp.co.cyberagent.android.gpuimage.PixelBuffer
+import okio.Okio
+import okio.buffer
+import okio.sink
+import okio.source
 import java.io.File
 import kotlin.math.roundToInt
 
@@ -35,7 +42,10 @@ class SampleLottieAnimationActivity : AppCompatActivity() {
     private val bgpictureArray = mutableListOf<Picture>()
     private val fgpictureArray = mutableListOf<Picture>()
     private val cacheFile by lazy {
-        File(this.cacheDir, "cache_lottie_seq")
+        File(this.cacheDir, "cache_lottie_seq").apply { mkdir() }
+    }
+    private val cacheFile2 by lazy {
+        File(this.cacheDir, "lottie_blend/lottie_seq_images")
     }
     private val lottieViewBg get() = bind.lottieViewBg
     private val lottieViewFg get() = bind.lottieViewFg
@@ -86,6 +96,7 @@ class SampleLottieAnimationActivity : AppCompatActivity() {
         bind.btnProcess.setOnClickListener { startProcess() }
         bind.btnMergeMp4.setOnClickListener { startMergeVideo() }
         bind.btnFfmpegFormat.setOnClickListener { startLogFFmpegFormat() }
+        bind.btnVideoBright.setOnClickListener { startVideoBright() }
     }
 
     private fun replaceImg(width: Int, height: Int, @DrawableRes resId: Int): Bitmap {
@@ -195,22 +206,62 @@ class SampleLottieAnimationActivity : AppCompatActivity() {
         Thread {
             val realFrameRate = /*pictureArray.size.toFloat() / frameCount * frameRate*/60f
             //crf 0(无损) - 50(最大压缩) ，推荐29
-            var cmdArgs: Array<String?>
-            cmdArgs = arrayOf(
-                "ffmpeg",
-                "-framerate", "${realFrameRate.toInt()}",
-                "-i", "${cacheFile.absolutePath}/%03d.jpg",
-                "-pix_fmt", "yuv420p",
-                "-crf", "15",
-                "-vcodec", "mpeg4", //libx264 不行？
-                // "-c:v", "libx264",
-                "-b:v", "5000k", //视频比特率，越大文件越大
-                // "-vpre", "default", //libx264 更好质量需要更长时间编码，default，normal，hq，max
-                "-level", "4.0",
-                "-bf", "0",
-                // "-bufsize", "2000k",
-                "-y", "${this.cacheDir.absolutePath}/merge.mp4"
-            )
+
+
+            // val inputTxt = File("${cacheDir.absolutePath}/input.txt").apply { delete() }
+            // inputTxt.createNewFile()
+            // val list = cacheFile.list()
+            // val buffer = inputTxt.sink().buffer()
+            // list.forEachIndexed { index, s ->
+            //     val isLast = index == list.size - 1
+            //     val string = "${cacheFile.absolutePath}/${String.format("%03d", index)}.jpg"
+            //     buffer.writeUtf8(string)
+            //     if (!isLast) {
+            //         buffer.writeUtf8("\n")
+            //     }
+            // }
+            // buffer.close()
+
+            File("${filesDir.absolutePath}/merge.mp4").apply {
+                delete()
+                createNewFile()
+            }
+            File("${cacheFile.absolutePath}/merge.mp4").apply {
+                delete()
+                createNewFile()
+            }
+
+            val args = mutableListOf<String?>().apply {
+                append("ffmpeg")
+                append("-framerate").append("$realFrameRate")
+                append("-i").append("${cacheFile.absolutePath}/%03d.jpg")
+                append("-pix_fmt").append("yuv420p")
+                append("-crf").append("15")
+                append("-vcodec").append("mpeg4")
+                append("-b:v").append("5000k") //视频比特率，越大文件越大
+                // a("-vpre").a("default") //libx264 更好质量需要更长时间编码，default，normal，hq，max
+                append("-level").append("4.0")
+                append("-bf").append("0")
+                append("-y").append("${cacheDir.absolutePath}/merge.mp4")
+
+
+                //libx264
+                clear()
+                // append("ffmpeg")
+                append("-y")
+                append("-f").append("image2")
+                append("-framerate").append("60")
+                append("-i").append("${cacheFile2.absolutePath}/%03d.jpg")
+                append("-c:v").append("libx264")
+                append("-crf").append("15")
+                append("-pix_fmt").append("yuv420p")
+                // a("-b:v").a("5000k") //视频比特率，越大文件越大
+                append("${cacheFile.absolutePath}/merge.mp4")
+
+            }
+            var cmdArgs: Array<String?> = args.toTypedArray()
+            logd(TAG, "$cmdArgs")
+            FFmpegCommand.setDebug(true)
             FFmpegCommand.runCmd(cmdArgs, object : IFFmpegCallBack {
                 override fun onCancel() {
                     Log.d(TAG, "onCancel: ")
@@ -247,5 +298,38 @@ class SampleLottieAnimationActivity : AppCompatActivity() {
 
         val encodeFormat = FFmpegCommand.getSupportCodec(CodecAttribute.ENCODE_VIDEO)
         Log.d(TAG, "startLogFFmpegFormat: encodeFormat:${encodeFormat}")
+    }
+    private fun startVideoBright() {
+        Thread {
+            val srcFile = File(this.applicationContext.filesDir, "video.mp4")
+            val targetFile = File(this.applicationContext.filesDir, "video_bright.mp4").apply { delete() }
+            val cmdArg = FFmpegUtils.videoBright(srcFile.absolutePath, targetFile.absolutePath, 0.1f)
+            FFmpegCommand.runCmd(cmdArg, object : IFFmpegCallBack {
+                override fun onCancel() {
+                    Log.d(TAG, "onCancel: ")
+                }
+
+                override fun onComplete() {
+                    Log.d(TAG, "onComplete: ")
+                    runOnUiThread {
+                        val intent = Intent(this@SampleLottieAnimationActivity, SampleVideoViewActivity::class.java)
+                        intent.putExtra("video", targetFile.absolutePath)
+                        this@SampleLottieAnimationActivity.startActivity(intent)
+                    }
+                }
+
+                override fun onError(errorCode: Int, errorMsg: String?) {
+                    Log.d(TAG, "onError: $errorCode, $errorMsg")
+                }
+
+                override fun onProgress(progress: Int, pts: Long) {
+                    Log.d(TAG, "onProgress: $progress, $pts")
+                }
+
+                override fun onStart() {
+                    Log.d(TAG, "onStart: ")
+                }
+            })
+        }.start()
     }
 }

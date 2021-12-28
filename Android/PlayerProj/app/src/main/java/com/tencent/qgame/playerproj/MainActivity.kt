@@ -15,8 +15,11 @@
  */
 package com.tencent.qgame.playerproj
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import com.tencent.qgame.playerproj.databinding.ActivityMainBinding
 import com.tencent.qgame.playerproj.player.AnimActiveDemoActivity
@@ -31,6 +34,11 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         val bind = ActivityMainBinding.inflate(layoutInflater)
         setContentView(bind.root)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE), 0x11)
+        }
+
         bind.btn1.setOnClickListener {
             startActivity(Intent(this, AnimSimpleDemoActivity::class.java))
         }
@@ -49,8 +57,18 @@ class MainActivity : Activity() {
         bind.btn6.setOnClickListener {
             startActivity(Intent(this, SampleLottieBlendActivity::class.java))
         }
+        bind.btn7.setOnClickListener {
+            startActivity(Intent(this, SampleMaskColorActivity::class.java))
+        }
 
-        bind.btn6.performClick()
+        // bind.btn6.performClick()
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        grantResults.find { it == PackageManager.PERMISSION_DENIED }?.apply {
+            finish()
+        }
     }
 
 

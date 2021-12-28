@@ -7,7 +7,6 @@ import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
 class RainbowFilter : BaseGlitchFilter(FRAGMENT_SHADER), IFilter {
     private var amountUniform = 0
     private var offsetUniform = 0
-    private var intensity: Float = 0.3f
     override fun onInit() {
         super.onInit()
         amountUniform = GLES20.glGetUniformLocation(program, "amount")
@@ -59,6 +58,6 @@ class RainbowFilter : BaseGlitchFilter(FRAGMENT_SHADER), IFilter {
 
     override fun doFrame(startFrame: Int, endFrame: Int, frame: Int, index: Int) {
         setIntensity(intensity)
-        setTime(++count * 0.0167f * 0.5f)
+        setTime(calculateTimes(frame))
     }
 }

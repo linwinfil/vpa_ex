@@ -4,6 +4,7 @@ import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
 import android.opengl.GLES20
 import androidx.annotation.CallSuper
 import com.at.lottie.IFilter
+import com.at.lottie.gpu.GpuFilters
 import java.nio.FloatBuffer
 
 internal interface IGlitch {
@@ -15,14 +16,19 @@ internal interface IGlitch {
 abstract class BaseGlitchFilter : GPUImageFilter, IGlitch, IFilter {
     private var timeUniform = 0
 
+
     internal open var enableDraw: Boolean = true
     internal open var count = 0
+    internal var intensity = 0.2f
+
 
     constructor(fragmentShader: String?) : super(NO_FILTER_VERTEX_SHADER, fragmentShader) {}
     constructor(vertexShader: String?, fragmentShader: String?) : super(vertexShader, fragmentShader) {}
 
+    @CallSuper
     override fun onInit() {
         super.onInit()
+        intensity = GpuFilters.getIntensity(this)
         timeUniform = GLES20.glGetUniformLocation(program, "time")
     }
 
@@ -48,6 +54,8 @@ abstract class BaseGlitchFilter : GPUImageFilter, IGlitch, IFilter {
     override fun setTime(time: Float) {
         runOnDraw { GLES20.glUniform1f(timeUniform, time) }
     }
+
+    fun calculateTimes(frame: Int): Float = ++count * (1f / 60)
 
     abstract override fun setIntensity(intensity: Float)
     override fun reset() {

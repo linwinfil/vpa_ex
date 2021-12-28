@@ -39,7 +39,10 @@ class BadTVFilter : BaseGlitchFilter(FRAGMENT_SHADER), IFilter {
     }
 
 
-    override fun doFrame(startFrame: Int, endFrame: Int, frame: Int, index: Int) {}
+    override fun doFrame(startFrame: Int, endFrame: Int, frame: Int, index: Int) {
+        setIntensity(intensity)
+        setTime(calculateTimes(frame))
+    }
 
     companion object {
         private const val FRAGMENT_SHADER = "" +

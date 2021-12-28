@@ -3,6 +3,7 @@ package com.at.lottie.utils
 import android.content.Context
 import android.graphics.*
 import android.net.Uri
+import android.text.Html
 import com.at.lottie.Blend
 import com.blankj.utilcode.util.ResourceUtils
 import com.google.gson.Gson
@@ -12,16 +13,39 @@ import kotlin.math.roundToInt
 /**
  * Created by linmaoxin on 2021/12/23
  */
+
+public fun <E> MutableList<E>.append(e: E): MutableList<E> = apply { add(e) }
+
 object BlendUtils {
 
-    fun parseBlendAsset(context: Context, fileName: String): Blend? {
+
+    /**
+     * 解析asset下blend.json
+     */
+    fun parseBlendAsset(fileName: String, parentFolder: String = ""): Blend? {
         return runCatching {
             Gson().fromJson(ResourceUtils.readAssets2String(fileName), Blend::class.java)
         }.getOrElse {
             it.printStackTrace()
             null
+        }?.also { blend->
+            if (parentFolder.isNotEmpty()) {
+                val parentFolderSuffix = if (!parentFolder.endsWith("/")) "$parentFolder/" else parentFolder
+                blend.audio?.apply {
+                    if (data.isNotEmpty()) {
+                        data = "$parentFolderSuffix$data"
+                    }
+                }
+                blend.bg?.apply {
+                    if (data.isNotEmpty()) data = "$parentFolderSuffix$data"
+                    if (images.isNotEmpty()) images = "$parentFolderSuffix$images"
+                }
+                blend.fg?.apply {
+                    if (data.isNotEmpty()) data = "$parentFolderSuffix$data"
+                    if (images.isNotEmpty()) images = "$parentFolderSuffix$images"
+                }
+            }
         }
-
     }
 
     fun scaleBitmap(context: Context, width: Int, height: Int, src: Any?): Bitmap? {

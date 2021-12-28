@@ -5,7 +5,6 @@ import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
 
 class ShakeFilter : BaseGlitchFilter(FRAGMENT_SHADER), IGlitch {
     private var amountUniform = 0
-    private var intensity = 0.4f
 
     override fun onInit() {
         super.onInit()
@@ -33,7 +32,7 @@ class ShakeFilter : BaseGlitchFilter(FRAGMENT_SHADER), IGlitch {
 
     override fun doFrame(startFrame: Int, endFrame: Int, frame: Int, index: Int) {
         setIntensity(intensity)
-        setTime(++count * 0.0167f * 0.5f)
+        setTime(calculateTimes(frame))
     }
 
     companion object {

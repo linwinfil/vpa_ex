@@ -1,30 +1,33 @@
 {
-    "bg"://背景，必选
-    {
-        "data": "bg/data.json", //背景动画json，必选
-        "images": "bg/images",  //背景动画占位素材，必选
-        "filters"://滤镜帧可选
-        [
-            {
-                "id": 0,        //滤镜id
-                "start": 0,     //起始帧
-                "end": 100      //结束帧，-1为全局结束
-                
-            },
-            {
-                "start": 101,
-                "end": -1,
-                "id": 1
-            }
-        ]
-    },
-    "fg"://可选
-    {
-        "data": "fg/data.json", //前景动画json
-        "images": "fg/images"   //前景动画序列帧图
-    },
-    "audio"://融合音频，可选
-    {
-        "data": "audio.mp3"     
-    }
+  "bg": {
+    "data": "bg/data.json",
+    "images": "bg/images",
+    "filters": [
+      {
+        "id": 2,
+        "start": 0,
+        "end": 30,
+        "intensity": 0.1
+      },
+      {
+        "start": 31,
+        "end": 110,
+        "id": 6,
+        "intensity": 0.1
+      },
+      {
+        "start": 64,
+        "end": 110,
+        "id": 5,
+        "intensity": 0.1
+      }
+    ]
+  },
+  "fg": {
+    "data": "fg/data.json",
+    "images": "fg/images"
+  },
+  "audio": {
+    "data": "bg.m4a"
+  }
 }

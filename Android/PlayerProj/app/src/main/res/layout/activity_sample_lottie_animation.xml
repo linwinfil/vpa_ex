@@ -60,6 +60,7 @@
         android:text="start"
         android:textAllCaps="false"
         android:visibility="gone"
+        tools:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -70,6 +71,7 @@
         android:text="process"
         android:textAllCaps="false"
         android:visibility="gone"
+        tools:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/btn_start" />
 
@@ -80,6 +82,7 @@
         android:text="merge video"
         android:textAllCaps="false"
         android:visibility="gone"
+        tools:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/btn_process" />
 
@@ -90,6 +93,19 @@
         android:text="log ffmpeg format"
         android:textAllCaps="false"
         android:visibility="visible"
+        tools:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/btn_merge_mp4" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_video_bright"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="video bright"
+        android:textAllCaps="false"
+        android:visibility="visible"
+        tools:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@id/btn_ffmpeg_format"
+        app:layout_constraintEnd_toEndOf="@id/btn_ffmpeg_format" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

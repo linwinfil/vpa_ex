@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+<rotate xmlns:android="http://schemas.android.com/apk/res/android"
+    android:fromDegrees="-90"
+    android:pivotX="50%"
+    android:pivotY="50%"
+    android:toDegrees="270">
+
+    <shape android:shape="ring" android:useLevel="false">
+        <gradient
+            android:angle="0"
+            android:endColor="@color/gradient_end"
+            android:startColor="@color/gradient_start"
+            android:type="sweep"
+            android:useLevel="false" />
+    </shape>
+</rotate>-->
+
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@android:id/background">
+        <shape android:shape="ring" android:useLevel="false">
+            <corners android:radius="4dp" />
+            <solid android:color="#66FFFFFF" />
+        </shape>
+    </item>
+
+    <item android:id="@android:id/progress">
+        <shape
+            android:shape="ring"
+            android:useLevel="true">
+            <solid android:color="@android:color/white"/>
+        </shape>
+
+    </item>
+</layer-list>
