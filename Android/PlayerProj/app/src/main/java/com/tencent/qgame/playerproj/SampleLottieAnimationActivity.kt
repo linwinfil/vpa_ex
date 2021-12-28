@@ -24,10 +24,6 @@ import com.at.lottie.utils.logd
 import com.coder.ffmpeg.utils.FFmpegUtils
 import jp.co.cyberagent.android.gpuimage.GPUImageRenderer
 import jp.co.cyberagent.android.gpuimage.PixelBuffer
-import okio.Okio
-import okio.buffer
-import okio.sink
-import okio.source
 import java.io.File
 import kotlin.math.roundToInt
 

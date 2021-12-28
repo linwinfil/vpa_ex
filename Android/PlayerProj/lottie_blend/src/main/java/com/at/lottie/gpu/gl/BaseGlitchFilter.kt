@@ -6,10 +6,12 @@ import androidx.annotation.CallSuper
 import com.at.lottie.IFilter
 import com.at.lottie.gpu.GpuFilters
 import java.nio.FloatBuffer
+import kotlin.math.min
 
 internal interface IGlitch {
     fun setTime(time: Float)
     fun setIntensity(intensity: Float)
+    fun setIntensityValue(intensity: Float)
     fun reset()
 }
 
@@ -19,8 +21,7 @@ abstract class BaseGlitchFilter : GPUImageFilter, IGlitch, IFilter {
 
     internal open var enableDraw: Boolean = true
     internal open var count = 0
-    internal var intensity = 0.2f
-
+    var intensityFloat = 0.2f
 
     constructor(fragmentShader: String?) : super(NO_FILTER_VERTEX_SHADER, fragmentShader) {}
     constructor(vertexShader: String?, fragmentShader: String?) : super(vertexShader, fragmentShader) {}
@@ -28,7 +29,7 @@ abstract class BaseGlitchFilter : GPUImageFilter, IGlitch, IFilter {
     @CallSuper
     override fun onInit() {
         super.onInit()
-        intensity = GpuFilters.getIntensity(this)
+        intensityFloat = GpuFilters.getIntensity(this)
         timeUniform = GLES20.glGetUniformLocation(program, "time")
     }
 
@@ -55,9 +56,12 @@ abstract class BaseGlitchFilter : GPUImageFilter, IGlitch, IFilter {
         runOnDraw { GLES20.glUniform1f(timeUniform, time) }
     }
 
+    override fun setIntensityValue(intensity: Float) {
+        intensityFloat = intensity
+    }
+
     fun calculateTimes(frame: Int): Float = ++count * (1f / 60)
 
-    abstract override fun setIntensity(intensity: Float)
     override fun reset() {
         setTime(0f)
         setIntensity(0f)

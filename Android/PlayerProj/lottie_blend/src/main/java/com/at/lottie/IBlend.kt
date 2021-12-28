@@ -5,6 +5,7 @@ import android.os.HandlerThread
 import android.os.Parcelable
 import com.airbnb.lottie.LottieAnimationView
 import com.at.lottie.gpu.GpuFilters
+import com.at.lottie.gpu.gl.IGlitch
 import com.google.gson.annotations.SerializedName
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
 import java.io.Serializable
@@ -40,8 +41,10 @@ class Filter : IData {
     @SerializedName("id") var id: Int = 0
     @SerializedName("start") var start: Int = 0
     @SerializedName("end" )var end: Int = -1
+    @SerializedName("intensity") var intensity:Float = -1f
 
     fun toFrameFilter(): FrameFilter? = GpuFilters.getGpuFilter(id)?.run {
+        if (intensity != -1f && this is IGlitch) { this.setIntensityValue(intensity)}
         FrameFilter(start, end, this)
     }
 }

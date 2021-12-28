@@ -43,14 +43,14 @@ class RGBShiftFilter : BaseGlitchFilter(FRAGMENT_SHADER), IFilter {
     }
 
     override fun setIntensity(intensity: Float) {
-        this.intensity = intensity
+        this.intensityFloat = intensity
         runOnDraw {
             GLES20.glUniform1f(amountUniform, 0.03f * intensity)
         }
     }
 
     override fun doFrame(startFrame: Int, endFrame: Int, frame: Int, index: Int) {
-        setIntensity(intensity)
+        setIntensity(intensityFloat)
         setTime(calculateTimes(frame))
     }
 

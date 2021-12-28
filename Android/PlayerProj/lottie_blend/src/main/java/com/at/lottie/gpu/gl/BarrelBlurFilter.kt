@@ -29,7 +29,7 @@ class BarrelBlurFilter : BaseGlitchFilter(FRAGMENT_SHADER), IFilter {
     }
 
     override fun doFrame(startFrame: Int, endFrame: Int, frame: Int, index: Int) {
-        setIntensity(intensity)
+        setIntensity(intensityFloat)
         setTime(calculateTimes(frame))
     }
 

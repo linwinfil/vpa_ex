@@ -34,7 +34,7 @@ class JitterFilter : BaseGlitchFilter(FRAGMENT_SHADER), IGlitch {
     }
 
     override fun doFrame(startFrame: Int, endFrame: Int, frame: Int, index: Int) {
-        setIntensity(intensity)
+        setIntensity(intensityFloat)
         setTime(calculateTimes(frame))
     }
 

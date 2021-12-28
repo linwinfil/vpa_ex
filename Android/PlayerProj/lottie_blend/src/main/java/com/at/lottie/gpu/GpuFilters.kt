@@ -40,8 +40,6 @@ object GpuFilters {
         return filters.find { it.id == id }?.clazz?.newInstance()
     }
 
-    fun getIntensity(id: Int): Float = filters.find { it.id == id }?.intensity ?: 0f
-
     fun getIntensity(t: IFilter): Float = filters.find { it.clazz == t::class.java }?.intensity ?: 0f
 
 }

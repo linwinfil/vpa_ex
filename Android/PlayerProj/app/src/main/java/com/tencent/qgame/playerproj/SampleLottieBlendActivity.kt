@@ -1,15 +1,13 @@
 package com.tencent.qgame.playerproj
 
+import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.os.FileUtils
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import com.at.lottie.*
 import com.at.lottie.utils.BlendUtils
 import com.tencent.qgame.playerproj.databinding.ActivitySampleLottieBlendBinding
