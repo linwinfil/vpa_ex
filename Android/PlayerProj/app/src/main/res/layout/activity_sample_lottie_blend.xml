@@ -36,6 +36,17 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         tools:ignore="HardcodedText" />
+
+     <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_choose_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="choose image"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/btn_start"
+        tools:ignore="HardcodedText" />
+
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_play_video"
         android:layout_width="wrap_content"

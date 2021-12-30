@@ -25,6 +25,13 @@ class HalftoneJitterFilter : GPUImageFilterGroup(
         }
     }
 
+    override fun setIntensityValue(intensity: Float) {
+        for (filter in filters) {
+            val glitchFilter = filter as IGlitch
+            glitchFilter.setIntensityValue(intensity)
+        }
+    }
+
     override fun reset() {
         for (filter in filters) {
             val glitchFilter = filter as IGlitch
@@ -49,5 +56,9 @@ class HalftoneJitterFilter : GPUImageFilterGroup(
     }
 
     override fun doFrame(startFrame: Int, endFrame: Int, frame: Int, index: Int) {
+        for (filter in filters) {
+            val glitchFilter = filter as IFilter
+            glitchFilter.doFrame(startFrame, endFrame, frame, index)
+        }
     }
 }

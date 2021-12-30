@@ -1,0 +1,90 @@
+[
+  {
+    "name": "Original",
+    "id": "0",
+    "thumb": "ic_edit_filter_none",
+    "intensity": 0,
+    "free": true,
+    "video": "none"
+  },
+  {
+    "name": "Glitcher",
+    "id": "1",
+    "thumb": "jitter_thumb.jpg",
+    "intensity": 18,
+    "free": true,
+    "video": "jitter.mp4"
+  },
+  {
+    "name": "RGB Shift",
+    "id": "2",
+    "thumb": "rgbshift_thumb.jpg",
+    "intensity": 28,
+    "free": false,
+    "video": "rgbshift.mp4"
+  },
+  {
+    "name": "Noise",
+    "id": "3",
+    "thumb": "scanlines_thumb.jpg",
+    "intensity": 100,
+    "free": true,
+    "video": "scanlines.mp4"
+  },
+  {
+    "name": "BadTV",
+    "id": "4",
+    "thumb": "badtv_thumb.jpg",
+    "intensity": 40,
+    "free": false,
+    "video": "badtv.mp4"
+  },
+  {
+    "name": "Shake",
+    "id": "5",
+    "thumb": "shake_thumb.jpg",
+    "intensity": 44,
+    "free": false,
+    "video": "shake.mp4"
+  },
+  {
+    "name": "Rainbow",
+    "id": "6",
+    "thumb": "rainbow_thumb.jpg",
+    "intensity": 50,
+    "free": false,
+    "video": "rainbow.mp4"
+  },
+  {
+    "name": "Dot Matrix",
+    "id": "7",
+    "thumb": "dot_thumb.jpg",
+    "intensity": 55,
+    "free": false,
+    "video": "dot.mp4"
+  },
+  {
+    "name": "Blur",
+    "id": "8",
+    "thumb": "barrel_smear_thumb.jpg",
+    "intensity": 44,
+    "free": false,
+    "video": "barrel+smear.mp4"
+  },
+  {
+    "name": "Monochrome",
+    "id": "9",
+    "thumb": "halftone_jitter_thumb.jpg",
+    "intensity": 28,
+    "free": false,
+    "video": "halftone+jitter.mp4"
+  },
+  {
+    "name": "Vertigo",
+    "id": "10",
+    "thumb": "rgbshift_thumb.jpg",
+    "intensity": 11,
+    "free": false,
+    "video": "rgbshift+shake.mp4"
+  }
+]

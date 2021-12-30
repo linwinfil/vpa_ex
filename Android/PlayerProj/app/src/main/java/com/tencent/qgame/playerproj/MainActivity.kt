@@ -22,6 +22,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import com.tencent.qgame.playerproj.databinding.ActivityMainBinding
+import com.tencent.qgame.playerproj.gpu.SampleGpuViewActivity
 import com.tencent.qgame.playerproj.player.AnimActiveDemoActivity
 import com.tencent.qgame.playerproj.player.AnimSimpleDemoActivity
 import com.tencent.qgame.playerproj.player.AnimSpecialSizeDemoActivity
@@ -36,7 +37,7 @@ class MainActivity : Activity() {
         setContentView(bind.root)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE), 0x11)
+            // requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE), 0x11)
         }
 
         bind.btn1.setOnClickListener {
@@ -59,6 +60,12 @@ class MainActivity : Activity() {
         }
         bind.btn7.setOnClickListener {
             startActivity(Intent(this, SampleMaskColorActivity::class.java))
+        }
+        bind.btn8.setOnClickListener {
+            startActivity(Intent(this, SampleAgingBlendActivity::class.java))
+        }
+        bind.btn9.setOnClickListener {
+            startActivity(Intent(this, SampleGpuViewActivity::class.java))
         }
 
         // bind.btn6.performClick()

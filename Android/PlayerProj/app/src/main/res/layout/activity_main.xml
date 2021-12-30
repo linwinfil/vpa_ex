@@ -18,41 +18,64 @@
             android:id="@+id/btn1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Simple Demo" />
+            android:text="Simple Demo"
+            android:textAllCaps="false" />
 
         <Button
             android:id="@+id/btn2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="VAPX Demo(融合动画)" />
+            android:text="VAPX Demo(融合动画)"
+            android:textAllCaps="false" />
 
         <Button
             android:id="@+id/btn3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Active Demo(可变动画)" />
+            android:text="Active Demo(可变动画)"
+            android:textAllCaps="false" />
 
         <Button
             android:id="@+id/btn4"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Special Size Demo" />
+            android:text="Special Size Demo"
+            android:textAllCaps="false" />
 
         <Button
             android:id="@+id/btn5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="sample lottie animation" />
+            android:text="sample lottie animation"
+            android:textAllCaps="false" />
+
         <Button
             android:id="@+id/btn6"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="sample lottie blend" />
+            android:text="sample lottie blend"
+            android:textAllCaps="false" />
+
         <Button
             android:id="@+id/btn7"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="sample mask color" />
+            android:text="sample mask color"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn8"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="sample aging blend"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn9"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="sample gpu image view"
+            android:textAllCaps="false" />
 
     </LinearLayout>
 

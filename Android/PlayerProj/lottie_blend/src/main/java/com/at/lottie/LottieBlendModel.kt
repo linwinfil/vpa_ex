@@ -10,6 +10,7 @@ import android.os.SystemClock
 import android.util.Size
 import android.view.View
 import android.view.animation.LinearInterpolator
+import androidx.annotation.IntDef
 import androidx.annotation.MainThread
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
@@ -53,9 +54,13 @@ internal fun Canvas.clear() = drawColor(0, PorterDuff.Mode.CLEAR)
 class LottieBlendModel(application: Application) : AndroidViewModel(application) {
     companion object {
         private const val TAG = "${Constant.TAG}.BlendModel"
-        private const val STEP_DRAW_1 = 1
-        private const val STEP_FILTER_2 = 1 shl 1
-        private const val STEP_MERGE_3 = 1 shl 2
+
+        @Retention(AnnotationRetention.SOURCE)
+        @IntDef(STEP_DRAW_1, STEP_FILTER_2, STEP_MERGE_3)
+        annotation class Step
+        const val STEP_DRAW_1 = 1
+        const val STEP_FILTER_2 = 1 shl 1
+        const val STEP_MERGE_3 = 1 shl 2
     }
 
     lateinit var blend: IBlend
@@ -145,18 +150,27 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
     private val frameFilterDelegates by lazy { mutableListOf<FrameFilter>() }
     private val audioDelegate by lazy { mutableListOf<AudioDelegate>() }
 
+    private fun postOnStart() {
+        logd("$TAG.progress", "OnStart")
+        progressLiveData.postValue(OnStart)
+    }
+
     private fun postOnCancel() {
+        logd("$TAG.progress", "OnCancel")
         progressLiveData.postValue(OnCancel)
     }
 
     private fun postOnError(code: Int, msg: String?) {
+        logd("$TAG.progress", "OnError")
         progressLiveData.postValue(OnError(code, msg))
     }
 
     private fun postOnCompleted() {
+        logd("$TAG.progress", "OnComplete")
         progressLiveData.postValue(OnComplete(tempOutputPath))
     }
-    private fun postOnProgress(step: Int, progress: Int) {
+
+    private fun postOnProgress(step: Int, progress: Int, pts: Long = 0) {
         //按照20-50-30进度分割
         val fact = progress.toFloat() / 100
         val posProgress: Int = when (step) {
@@ -166,7 +180,7 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
             else -> progressLiveData.value?.takeIf { it is OnProgress }?.let { (it as OnProgress).progress } ?: 0
         }
         logd("$TAG.progress", "progress:$posProgress")
-        progressLiveData.postValue(OnProgress(posProgress, 0))
+        progressLiveData.postValue(OnProgress(posProgress, 0, step))
     }
 
 
@@ -330,6 +344,7 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
             add("-y");add(tempOutputPath)
         }
         val cmdArgs: Array<String?> = args.toTypedArray()
+        FFmpegCommand.setDebug(BuildConfig.DEBUG)
         FFmpegCommand.runCmd(cmdArgs, object : IFFmpegCallBack {
             override fun onCancel() {
                 mergeFramesLiveData.postValue(OnCancel)
@@ -357,8 +372,8 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
                         postOnCancel()
                         return
                     }
-                    mergeFramesLiveData.postValue(OnProgress(progress, pts))
-                    postOnProgress(STEP_MERGE_3, progress)
+                    mergeFramesLiveData.postValue(OnProgress(progress, pts, STEP_MERGE_3))
+                    postOnProgress(STEP_MERGE_3, progress, pts)
                     logd(TAG, "onProgress: $progress, $pts")
                 }
             }
@@ -390,6 +405,7 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
             frameFilterDelegates.add(filter)
         }
     }
+    fun removeAllFrameFilterDelegate() = apply { frameFilterDelegates.clear() }
 
     fun addVideoAudioDelegate(delegate: AudioDelegate) = apply { audioDelegate.add(delegate) }
 
@@ -484,6 +500,7 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
                     }
                 }
             })
+            postOnStart()
             start()
         }
     }

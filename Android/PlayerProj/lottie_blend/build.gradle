@@ -2,23 +2,27 @@ plugins {
     id 'com.android.library'
     id 'kotlin-android'
 }
+apply plugin: 'kotlin-android'
 
 android {
-    compileSdk 31
+    compileSdk rootProject.ext.android["compileSdkVersion"]
 
     defaultConfig {
-        minSdk 21
-        targetSdk 31
-        versionCode 1
-        versionName "1.0"
-
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles "consumer-rules.pro"
+        minSdk rootProject.ext.android["minSdkVersion"]
+        targetSdk rootProject.ext.android["targetSdkVersion"]
     }
 
     buildTypes {
-        release {
+        debug {
             minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug_release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        release {
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -32,14 +36,16 @@ android {
 }
 
 dependencies {
-    implementation rootProject.ext.dependencies['core_ktx']
+    implementation rootProject.ext.dependencies['ktx_core']
     implementation rootProject.ext.dependencies['androidx.appcompat']
     implementation rootProject.ext.dependencies['android.material']
     implementation rootProject.ext.dependencies['lottie']
-    implementation rootProject.ext.dependencies['viewmodel_ktx']
+    implementation rootProject.ext.dependencies['ktx_viewModel']
     implementation rootProject.ext.dependencies['utilcodex']
     implementation rootProject.ext.dependencies['ffmpeg_command_lite']
-    implementation rootProject.ext.dependencies['gson']
+    api rootProject.ext.dependencies['gson']
     api 'jp.co.cyberagent.android:gpuimage:2.1.0'
-
+}
+repositories {
+    mavenCentral()
 }

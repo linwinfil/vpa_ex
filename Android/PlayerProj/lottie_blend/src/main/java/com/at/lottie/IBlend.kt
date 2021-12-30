@@ -6,8 +6,11 @@ import android.os.Parcelable
 import com.airbnb.lottie.LottieAnimationView
 import com.at.lottie.gpu.GpuFilters
 import com.at.lottie.gpu.gl.IGlitch
+import com.blankj.utilcode.util.ResourceUtils
+import com.blankj.utilcode.util.Utils
 import com.google.gson.annotations.SerializedName
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
+import java.io.ByteArrayOutputStream
 import java.io.Serializable
 
 /**
@@ -44,8 +47,7 @@ class Filter : IData {
     @SerializedName("intensity") var intensity:Float = -1f
 
     fun toFrameFilter(): FrameFilter? = GpuFilters.getGpuFilter(id)?.run {
-        if (intensity != -1f && this is IGlitch) { this.setIntensityValue(intensity)}
-        FrameFilter(start, end, this)
+        FrameFilter(start, end, this, intensity = intensity)
     }
 }
 // ====================================== //
@@ -78,6 +80,8 @@ interface IFilter {
     fun doFrame(startFrame: Int, endFrame: Int, frame: Int, index: Int)
 }
 
+fun Int.raw2String():String = ResourceUtils.readRaw2String(this)
+
 enum class FrameType {
     Background, Foreground
 }
@@ -92,8 +96,13 @@ enum class FrameType {
  */
 class FrameFilter(
     private val startFrame: Int = 0, private val endFrame: Int = -1,
-    val filter: IFilter, val frameType: FrameType = FrameType.Background
+    val filter: IFilter, val frameType: FrameType = FrameType.Background, intensity: Float = -1f
 ) {
+    init {
+        if (intensity != -1f && filter is IGlitch) {
+            filter.setIntensityValue(intensity)
+        }
+    }
     fun inRange(frame: FramePicture): Boolean {
         checkArgs()
         if (frameType != frame.type) return false
@@ -134,7 +143,7 @@ internal data class HandlerHolder(var thread: HandlerThread?, var handler: Handl
 }
 
 sealed class BlendState
-data class OnProgress(val progress: Int, val pts: Long) : BlendState()
+data class OnProgress(val progress: Int, val pts: Long, @LottieBlendModel.Companion.Step val step:Int) : BlendState()
 data class OnError(val errorCode: Int, val errorMsg: String?) : BlendState()
 data class OnComplete(val path: String) : BlendState()
 object OnCancel : BlendState()

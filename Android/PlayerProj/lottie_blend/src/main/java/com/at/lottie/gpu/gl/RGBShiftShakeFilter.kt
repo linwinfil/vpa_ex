@@ -4,7 +4,9 @@ import com.at.lottie.IFilter
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilterGroup
 
-class RGBShiftShakeFilter : GPUImageFilterGroup(arrayListOf(BarrelBlurFilter(), SmearFilter()).toList()), IGlitch, IFilter {
+class RGBShiftShakeFilter : GPUImageFilterGroup(
+    arrayListOf(BarrelBlurFilter(), SmearFilter()).toList()
+), IGlitch, IFilter {
     private var enableDrawer = true
     override fun setTime(time: Float) {
         for (filter in filters) {
@@ -20,6 +22,13 @@ class RGBShiftShakeFilter : GPUImageFilterGroup(arrayListOf(BarrelBlurFilter(), 
         }
     }
 
+    override fun setIntensityValue(intensity: Float) {
+        for (filter in filters) {
+            val glitchFilter = filter as IGlitch
+            glitchFilter.setIntensityValue(intensity)
+        }
+    }
+
     override fun reset() {
         for (filter in filters) {
             val glitchFilter = filter as IGlitch
@@ -31,7 +40,12 @@ class RGBShiftShakeFilter : GPUImageFilterGroup(arrayListOf(BarrelBlurFilter(), 
         return this
     }
 
-    override fun doFrame(startFrame: Int, endFrame: Int, frame: Int, index: Int) {}
+    override fun doFrame(startFrame: Int, endFrame: Int, frame: Int, index: Int) {
+        for (filter in filters) {
+            val glitchFilter = filter as IFilter
+            glitchFilter.doFrame(startFrame, endFrame, frame, index)
+        }
+    }
     override fun isEnableDraw(): Boolean {
         return enableDrawer
     }

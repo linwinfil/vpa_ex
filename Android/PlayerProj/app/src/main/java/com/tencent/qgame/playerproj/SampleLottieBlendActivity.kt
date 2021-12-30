@@ -1,15 +1,21 @@
 package com.tencent.qgame.playerproj
 
-import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.view.View
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
 import com.at.lottie.*
 import com.at.lottie.utils.BlendUtils
+import com.at.lottie.utils.logd
+import com.blankj.utilcode.util.UriUtils
 import com.tencent.qgame.playerproj.databinding.ActivitySampleLottieBlendBinding
 import java.io.File
 
@@ -22,7 +28,7 @@ class SampleLottieBlendActivity : AppCompatActivity() {
     lateinit var bind: ActivitySampleLottieBlendBinding
 
 
-    var path:String = ""
+    var path: String = ""
     private val lottieBlendView get() = bind.lottieView
     private val progressBar get() = bind.progressCircular
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -94,15 +100,33 @@ class SampleLottieBlendActivity : AppCompatActivity() {
                     }
                     if (com.blankj.utilcode.util.FileUtils.copy(File(it.path), targetFile)) {
                         this.path = targetFile.absolutePath
+                        Toast.makeText(applicationContext, "已保存至${targetFile.absolutePath}", Toast.LENGTH_SHORT).show()
                     }
                     bind.btnPlayVideo.performClick()
                 }
-                else -> {}
+                is OnCancel -> {
+                    Toast.makeText(applicationContext, "已取消", Toast.LENGTH_SHORT).show()
+                }
+                is OnError -> {
+                    Toast.makeText(applicationContext, "失败，code:${it.errorCode}，msg:${it.errorMsg}", Toast.LENGTH_SHORT).show()
+                }
             }
         })
         bind.btnStart.setOnClickListener {
             model.startBlend()
         }
+        bind.btnChooseImage.setOnClickListener {
+            getContent.launch("image/*")
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        getContent.unregister()
+    }
+
+    val getContent = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        logd(TAG, UriUtils.uri2File(uri).absolutePath)
     }
 
     private fun setProcess(progress: Int) {

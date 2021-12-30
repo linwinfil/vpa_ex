@@ -22,14 +22,18 @@ abstract class BaseGlitchFilter : GPUImageFilter, IGlitch, IFilter {
     internal open var enableDraw: Boolean = true
     internal open var count = 0
     var intensityFloat = 0.2f
+    private val timeFactor: Float = 1f / 60//以60帧率单位
 
     constructor(fragmentShader: String?) : super(NO_FILTER_VERTEX_SHADER, fragmentShader) {}
     constructor(vertexShader: String?, fragmentShader: String?) : super(vertexShader, fragmentShader) {}
 
+    init {
+        intensityFloat = GpuFilters.getIntensity(this::class.java, 0.2f)
+    }
+
     @CallSuper
     override fun onInit() {
         super.onInit()
-        intensityFloat = GpuFilters.getIntensity(this)
         timeUniform = GLES20.glGetUniformLocation(program, "time")
     }
 
@@ -60,7 +64,7 @@ abstract class BaseGlitchFilter : GPUImageFilter, IGlitch, IFilter {
         intensityFloat = intensity
     }
 
-    fun calculateTimes(frame: Int): Float = ++count * (1f / 60)
+    fun calculateTimes(frame: Int): Float = ++count * timeFactor
 
     override fun reset() {
         setTime(0f)
