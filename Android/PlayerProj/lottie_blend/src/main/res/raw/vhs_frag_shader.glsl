@@ -1,20 +1,12 @@
-/** https://www.shadertoy.com/view/XtBXDt# */
 precision highp float;
-uniform sampler2D inputImageTexture; //纹理
-varying vec2 textureCoordinate;//纹理坐标
-
+uniform sampler2D inputImageTexture;//纹理
 uniform float time;//时间戳
-
-//#define time iTime
-#define resolution (iResolution.xy)
-#define iChannel0 iChannel0
-#define gl_FragCoord fragCoord
-#define gl_FragColor fragColor
+varying vec2 textureCoordinate;//纹理坐标
 
 #define PI 3.14159265
 
 vec3 tex2D(sampler2D _tex, vec2 _p){
-    vec3 col = texture(_tex, _p).xyz;
+    vec3 col = texture2D(_tex, _p).xyz;
     if (0.5 < abs(_p.x - 0.5)) {
         col = vec3(0.1);
     }
@@ -42,8 +34,8 @@ float noise(vec2 _v){
     return sum;
 }
 
-void main(/*out vec4 fragColor, in vec2 fragCoord*/){
-    vec2 uv = textureCoordinate.xy / resolution;
+void main(){
+    vec2 uv = vec2(textureCoordinate.xy);
     vec2 uvn = uv;
     vec3 col = vec3(0.0);
 
@@ -61,7 +53,7 @@ void main(/*out vec4 fragColor, in vec2 fragCoord*/){
     uvn.y += snPhase * 0.3;
     uvn.x += snPhase * ((noise(vec2(uv.y * 100.0, time * 10.0)) - 0.5) * 0.2);
 
-    col = tex2D(iChannel0, uvn);
+    col = tex2D(inputImageTexture, uvn);
     col *= 1.0 - tcPhase;
     col = mix(
     col,
@@ -72,9 +64,9 @@ void main(/*out vec4 fragColor, in vec2 fragCoord*/){
     // bloom
     for (float x = -4.0; x < 2.5; x += 1.0){
         col.xyz += vec3(
-        tex2D(iChannel0, uvn + vec2(x - 0.0, 0.0) * 7E-3).x,
-        tex2D(iChannel0, uvn + vec2(x - 2.0, 0.0) * 7E-3).y,
-        tex2D(iChannel0, uvn + vec2(x - 4.0, 0.0) * 7E-3).z
+            tex2D(inputImageTexture, uvn + vec2(x - 0.0, 0.0) * 7E-3).x,
+            tex2D(inputImageTexture, uvn + vec2(x - 2.0, 0.0) * 7E-3).y,
+            tex2D(inputImageTexture, uvn + vec2(x - 4.0, 0.0) * 7E-3).z
         ) * 0.1;
     }
     col *= 0.6;

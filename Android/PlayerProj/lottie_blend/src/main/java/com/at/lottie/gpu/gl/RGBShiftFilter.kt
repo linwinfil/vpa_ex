@@ -3,24 +3,12 @@ package com.at.lottie.gpu.gl
 import android.opengl.GLES20
 import androidx.annotation.FloatRange
 import com.at.lottie.IFilter
+import com.at.lottie.R
+import com.at.lottie.raw2String
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
+import java.time.temporal.TemporalAmount
 
-class RGBShiftFilter : BaseGlitchFilter(FRAGMENT_SHADER), IFilter {
-
-    companion object {
-        private val FRAGMENT_SHADER = "precision highp float;\n" +
-                "uniform sampler2D u_texture;\n" +
-                "uniform float u_amount;\n" +
-                "uniform float u_angle;\n" +
-                "varying vec2 textureCoordinate;\n" +
-                "void main() {\n" +
-                "    vec2 offset = u_amount * vec2(cos(u_angle), sin(u_angle));\n" +
-                "    vec4 cr = texture2D(u_texture, textureCoordinate + offset);\n" +
-                "    vec4 cga = texture2D(u_texture, textureCoordinate);\n" +
-                "    vec4 cb = texture2D(u_texture, textureCoordinate - offset);\n" +
-                "    gl_FragColor = vec4(cr.r, cga.g, cb.b, cga.a);\n" +
-                "}"
-    }
+class RGBShiftFilter : BaseGlitchFilter(R.raw.rgb_shift_frag_shader.raw2String()), IFilter {
 
     private var amountUniform = 0
     private var angleUniform = 0
@@ -35,6 +23,18 @@ class RGBShiftFilter : BaseGlitchFilter(FRAGMENT_SHADER), IFilter {
         runOnDraw {
             GLES20.glUniform1f(angleUniform, 0.0f)
             GLES20.glUniform1f(amountUniform, 0.0f)
+        }
+    }
+
+    fun setAngle(@FloatRange(from = 0.0, to = 6.28) angle: Float) {
+        runOnDraw {
+            GLES20.glUniform1f(angleUniform, angle)
+        }
+    }
+
+    fun setAmount(@FloatRange(from = 0.0, to = 0.1) amount: Float) {
+        runOnDraw {
+            GLES20.glUniform1f(amountUniform, amount)
         }
     }
 

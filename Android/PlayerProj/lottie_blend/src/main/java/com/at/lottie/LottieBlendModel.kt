@@ -81,8 +81,6 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
     val frameJpgQuality: Int = 100
         get() = max(min(100, field), 30)
 
-    private var outPutSize: Int = -1
-
     private val tempCacheFile = File(application.cacheDir, "lottie_blend")
     private val tempCacheImages = File(tempCacheFile, "lottie_seq_images")
     private val tempOutputPath = "${tempCacheFile.absolutePath}/merge.mp4"
@@ -209,6 +207,13 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
 
         var stopMerge = false
         var doFrameFilter: Boolean
+
+        var backgroundBitmap: Bitmap? = null
+        var backgroundCanvas: Canvas? = null
+
+        var foregroundBitmap: Bitmap? = null
+        var foregroundCanvas: Canvas? = null
+
         pictureBgArr.forEachIndexed { index, bgPicture ->
             synchronized(lock) {
                 if (stopBlend) {
@@ -220,8 +225,15 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
 
                 val elapsed = SystemClock.elapsedRealtime()
                 //draw background
-                val bgBitmap = Bitmap.createBitmap(bgPicture.width, bgPicture.height, Bitmap.Config.ARGB_8888)
-                val bgCanvas = Canvas(bgBitmap)
+                backgroundBitmap = backgroundBitmap?.apply {
+                    this.eraseColor(Color.TRANSPARENT)
+                }?: run { Bitmap.createBitmap(bgPicture.width, bgPicture.height, Bitmap.Config.ARGB_8888) }
+                val bgBitmap = backgroundBitmap!!
+
+                backgroundCanvas = backgroundCanvas?.apply {
+                    clear()
+                }?: run { Canvas(bgBitmap) }
+                val bgCanvas = backgroundCanvas!!
                 bgPicture.drawTo(bgCanvas)
 
                 doFrameFilter = false
@@ -254,8 +266,14 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
                     //draw foreground
                     val fgPicture = pictureFgArr[if (index >= pictureFgArr.size) pictureFgArr.size - 1 else index]
                     //绘制到前景画板后再绘制到背景画板
-                    val fgBitmap = Bitmap.createBitmap(fgPicture.width, fgPicture.height, Bitmap.Config.ARGB_8888)
-                    val fgCanvas = Canvas(fgBitmap)
+
+                    foregroundBitmap = foregroundBitmap?.apply {
+                        eraseColor(Color.TRANSPARENT)
+                    }?: run { Bitmap.createBitmap(fgPicture.width, fgPicture.height, Bitmap.Config.ARGB_8888) }
+                    val fgBitmap = foregroundBitmap!!
+                    foregroundCanvas = foregroundCanvas?.apply { clear() }?:run { Canvas(fgBitmap) }
+                    val fgCanvas = foregroundCanvas!!
+
                     fgPicture.drawTo(fgCanvas)
                     //blend foreground and background
                     bgCanvas.drawBitmap(fgBitmap, 0f, 0f, paint)
