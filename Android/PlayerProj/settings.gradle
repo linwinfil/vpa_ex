@@ -1,2 +1,3 @@
 include ':app', ':animtool', ':animplayer'
 include ':lottie_blend'
+include ':opencv_sdk'

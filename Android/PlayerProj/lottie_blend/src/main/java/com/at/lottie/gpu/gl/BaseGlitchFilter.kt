@@ -15,6 +15,9 @@ internal interface IGlitch {
     fun reset()
 }
 
+/**
+ * [故障风滤镜](https://photomosh.com/)
+ */
 abstract class BaseGlitchFilter : GPUImageFilter, IGlitch, IFilter {
     private var timeUniform = 0
 

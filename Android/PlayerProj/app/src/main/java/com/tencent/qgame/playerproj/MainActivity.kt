@@ -22,7 +22,9 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import com.tencent.qgame.playerproj.databinding.ActivityMainBinding
+import com.tencent.qgame.playerproj.gpu.SampleGpuMainActivity
 import com.tencent.qgame.playerproj.gpu.SampleGpuViewActivity
+import com.tencent.qgame.playerproj.opencv.SampleOpenCVMatActivity
 import com.tencent.qgame.playerproj.player.AnimActiveDemoActivity
 import com.tencent.qgame.playerproj.player.AnimSimpleDemoActivity
 import com.tencent.qgame.playerproj.player.AnimSpecialSizeDemoActivity
@@ -65,10 +67,13 @@ class MainActivity : Activity() {
             startActivity(Intent(this, SampleAgingBlendActivity::class.java))
         }
         bind.btn9.setOnClickListener {
-            startActivity(Intent(this, SampleGpuViewActivity::class.java))
+            startActivity(Intent(this, SampleGpuMainActivity::class.java))
+        }
+        bind.btn10.setOnClickListener {
+            startActivity(Intent(this, SampleOpenCVMatActivity::class.java))
         }
 
-        // bind.btn6.performClick()
+        //bind.btn9.performClick()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {

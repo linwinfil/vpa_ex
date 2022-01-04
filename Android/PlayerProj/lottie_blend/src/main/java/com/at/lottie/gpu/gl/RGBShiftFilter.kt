@@ -26,12 +26,14 @@ class RGBShiftFilter : BaseGlitchFilter(R.raw.rgb_shift_frag_shader.raw2String()
         }
     }
 
+    /** rgb 中心旋转角度 */
     fun setAngle(@FloatRange(from = 0.0, to = 6.28) angle: Float) {
         runOnDraw {
             GLES20.glUniform1f(angleUniform, angle)
         }
     }
 
+    /** rgb Y轴分离强度 */
     fun setAmount(@FloatRange(from = 0.0, to = 0.1) amount: Float) {
         runOnDraw {
             GLES20.glUniform1f(amountUniform, amount)

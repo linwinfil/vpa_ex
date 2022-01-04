@@ -1,10 +1,13 @@
 package com.at.lottie.gpu.gl
 
 import android.opengl.GLES20
+import androidx.annotation.FloatRange
 import com.at.lottie.IFilter
+import com.at.lottie.R
+import com.at.lottie.raw2String
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
 
-class HalfToneFilter : BaseGlitchFilter(FRAGMENT_SHADER), IFilter {
+class HalfToneFilter : BaseGlitchFilter(R.raw.halftone_frag_shader.raw2String()), IFilter {
     private var centerUniform = 0
     private var angleUniform = 0
     private var scaleUniform = 0
@@ -15,6 +18,22 @@ class HalfToneFilter : BaseGlitchFilter(FRAGMENT_SHADER), IFilter {
         angleUniform = GLES20.glGetUniformLocation(program, "angle")
         scaleUniform = GLES20.glGetUniformLocation(program, "scale")
         tSizeUniform = GLES20.glGetUniformLocation(program, "tSize")
+    }
+
+    fun setCenter(@FloatRange(from = 0.0, to = 0.5) center: Float) {
+        runOnDraw { GLES20.glUniform1f(centerUniform, center) }
+    }
+
+    fun setAngle(angle: Float) {
+        runOnDraw { GLES20.glUniform1f(angleUniform, angle) }
+    }
+
+    fun setScale(@FloatRange(from = 0.0, to = 1.0) scale: Float) {
+        runOnDraw { GLES20.glUniform1f(scaleUniform, scale) }
+    }
+
+    fun setTSize(@FloatRange(from = 0.0, to = 256.0) tSize: Float) {
+        runOnDraw { GLES20.glUniform1f(tSizeUniform, tSize) }
     }
 
     override fun onInitialized() {
@@ -42,32 +61,5 @@ class HalfToneFilter : BaseGlitchFilter(FRAGMENT_SHADER), IFilter {
     override fun doFrame(startFrame: Int, endFrame: Int, frame: Int, index: Int) {
         setIntensity(intensityFloat)
         setTime(calculateTimes(frame))
-    }
-
-    companion object {
-        private const val FRAGMENT_SHADER = "" +
-                "precision highp float;" +
-                "uniform vec2 center;" +
-                "uniform float angle;" +
-                "uniform float scale;" +
-                "uniform vec2 tSize;" +
-                "uniform sampler2D inputImageTexture;" +
-                "varying vec2 textureCoordinate;" +
-                "float pattern() {" +
-                "    float s = sin( angle );" +
-                "    float c = cos( angle );" +
-                "    vec2 tex = textureCoordinate * tSize - center;" +
-                "    vec2 point = vec2( c * tex.x - s * tex.y, s * tex.x + c * tex.y ) * scale;" +
-                "    return ( sin( point.x ) * sin( point.y ) ) * 4.0;" +
-                "}" +
-                "void main() {" +
-                "    vec4 color = texture2D( inputImageTexture, textureCoordinate );" +
-                "    if(scale == 0.0) {" +
-                "       gl_FragColor = color;" +
-                "       return;" +
-                "    } " +
-                "    float average = ( color.r + color.g + color.b ) / 3.0;" +
-                "    gl_FragColor = vec4( vec3( average * 10.0 - 5.0 + pattern() ), color.a );" +
-                "}"
     }
 }

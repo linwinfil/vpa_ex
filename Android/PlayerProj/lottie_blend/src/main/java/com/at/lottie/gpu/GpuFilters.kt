@@ -20,6 +20,7 @@ object GpuFilters {
     const val filter_blur = 8
     const val filter_monochrome = 9
     const val filter_vertigo = 10
+    const val filter_vhs = 11
 
     private val filters = arrayOf(
         GpuFilter(filter_glitch,     JitterFilter::class.java,         0.18f, "Glitch"),
@@ -32,6 +33,8 @@ object GpuFilters {
         GpuFilter(filter_blur,       BarrelBlurFilter::class.java,     0.44f, "Blur"),
         GpuFilter(filter_monochrome, HalftoneJitterFilter::class.java, 0.28f, "Manochrome"),
         GpuFilter(filter_vertigo,    RGBShiftShakeFilter::class.java,  0.11f, "Vertigo"),
+        // !new!
+        GpuFilter(filter_vhs,        VHSFilter::class.java,            1.0f,   "VHS")
 
         //todo 更多滤镜 coming soon
     )

@@ -6,6 +6,7 @@ import android.graphics.*
 import android.graphics.Matrix.ScaleToFit
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import android.view.Choreographer
 import android.widget.ImageView
 import androidx.annotation.Nullable
 import com.airbnb.lottie.*
@@ -269,15 +270,14 @@ class LottieEngine private constructor(
 
     override fun invalidateDrawable(who: Drawable) {
         lottieDrawable.invalidateDrawable(who)
-        TODO("Not yet implemented")
     }
 
     override fun scheduleDrawable(who: Drawable, what: Runnable, `when`: Long) {
-        TODO("Not yet implemented")
+        lottieDrawable.scheduleDrawable(who, what, `when`)
     }
 
     override fun unscheduleDrawable(who: Drawable, what: Runnable) {
-        TODO("Not yet implemented")
+        lottieDrawable.unscheduleDrawable(who, what)
     }
 
     override fun fetchBitmap(lottieImageAsset: LottieImageAsset?): Bitmap? {

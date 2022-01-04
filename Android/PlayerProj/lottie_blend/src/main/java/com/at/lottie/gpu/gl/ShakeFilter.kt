@@ -1,9 +1,12 @@
 package com.at.lottie.gpu.gl
 
 import android.opengl.GLES20
+import androidx.annotation.FloatRange
+import com.at.lottie.R
+import com.at.lottie.raw2String
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
 
-class ShakeFilter : BaseGlitchFilter(FRAGMENT_SHADER), IGlitch {
+class ShakeFilter : BaseGlitchFilter(R.raw.shake_frag_shader.raw2String()), IGlitch {
     private var amountUniform = 0
 
     override fun onInit() {
@@ -21,6 +24,11 @@ class ShakeFilter : BaseGlitchFilter(FRAGMENT_SHADER), IGlitch {
         super.setTime(time)
     }
 
+    /** 震动幅度 */
+    fun setAmount(@FloatRange(from = 0.0, to = 0.2) amount: Float) {
+        runOnDraw { GLES20.glUniform1f(amountUniform, amount) }
+    }
+
     override fun setIntensity(intensity: Float) {
         runOnDraw { GLES20.glUniform1f(amountUniform, 0.159f * intensity) }
     }
@@ -33,22 +41,5 @@ class ShakeFilter : BaseGlitchFilter(FRAGMENT_SHADER), IGlitch {
     override fun doFrame(startFrame: Int, endFrame: Int, frame: Int, index: Int) {
         setIntensity(intensityFloat)
         setTime(calculateTimes(frame))
-    }
-
-    companion object {
-        private const val FRAGMENT_SHADER = "" +
-                "precision highp float;" +
-                "uniform sampler2D inputImageTexture;" +
-                "uniform float time;" +
-                "uniform float amount;" +
-                "varying vec2 textureCoordinate;" +
-                "float random1d(float n){" +
-                "    return fract(sin(n) * 43758.5453);" +
-                "}" +
-                "void main() {" +
-                "    vec2 p = textureCoordinate;" +
-                "    vec2 offset = (vec2(random1d(time),random1d(time + 999.99)) - 0.5) * amount;" +
-                "    p += offset;gl_FragColor = texture2D(inputImageTexture, p);" +
-                "}"
     }
 }

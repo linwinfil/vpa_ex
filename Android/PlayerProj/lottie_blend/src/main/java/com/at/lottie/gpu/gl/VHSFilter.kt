@@ -9,24 +9,17 @@ import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
  */
 class VHSFilter : BaseGlitchFilter(R.raw.vhs_frag_shader.raw2String()) {
 
-    override fun onInit() {
-        super.onInit()
-    }
-
-    override fun onInitialized() {
-
-    }
-
-    override fun setIntensity(intensity: Float) {
-    }
 
     override fun getFilter(): GPUImageFilter = this
 
     override fun doFrame(startFrame: Int, endFrame: Int, frame: Int, index: Int) {
-        TODO("Not yet implemented")
+        setTime(calculateTimes(frame))
     }
 
     override fun onDrawArraysPre() {
         com.at.lottie.utils.GLUtils.checkGlError("vhs gl error")
+    }
+
+    override fun setIntensity(intensity: Float) {
     }
 }

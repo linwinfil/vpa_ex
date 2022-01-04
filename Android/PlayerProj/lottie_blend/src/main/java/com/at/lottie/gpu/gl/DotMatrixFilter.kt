@@ -1,10 +1,13 @@
 package com.at.lottie.gpu.gl
 
 import android.opengl.GLES20
+import androidx.annotation.FloatRange
 import com.at.lottie.IFilter
+import com.at.lottie.R
+import com.at.lottie.raw2String
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
 
-class DotMatrixFilter : BaseGlitchFilter(FRAGMENT_SHADER), IFilter {
+class DotMatrixFilter : BaseGlitchFilter(R.raw.dotmatrix_frag_shader.raw2String()), IFilter {
     private var dotsUniform = 0
     private var sizeUniform = 0
     private var blurUniform = 0
@@ -13,6 +16,21 @@ class DotMatrixFilter : BaseGlitchFilter(FRAGMENT_SHADER), IFilter {
         dotsUniform = GLES20.glGetUniformLocation(program, "dots")
         sizeUniform = GLES20.glGetUniformLocation(program, "size")
         blurUniform = GLES20.glGetUniformLocation(program, "blur")
+    }
+
+    /** 点个数 */
+    fun setDots(@FloatRange(from = 0.0, to = 200.0) dots: Float) {
+        runOnDraw { GLES20.glUniform1f(dotsUniform, dots) }
+    }
+
+    /** 点边缘黑边大小 */
+    fun setSize(@FloatRange(from = 0.0, to = 1.0) size: Float) {
+        runOnDraw { GLES20.glUniform1f(sizeUniform, size) }
+    }
+
+    /** 点圆角大小 */
+    fun setBlur(@FloatRange(from = 0.0, to = 1.0) blur: Float) {
+        runOnDraw { GLES20.glUniform1f(blurUniform, blur) }
     }
 
     override fun onInitialized() {
@@ -35,26 +53,5 @@ class DotMatrixFilter : BaseGlitchFilter(FRAGMENT_SHADER), IFilter {
     override fun doFrame(startFrame: Int, endFrame: Int, frame: Int, index: Int) {
         setIntensity(intensityFloat)
         setTime(calculateTimes(frame))
-    }
-
-    companion object {
-        private const val FRAGMENT_SHADER = "" +
-                "precision highp float;" +
-                "uniform sampler2D inputImageTexture;" +
-                "uniform float dots;" +
-                "uniform float size;" +
-                "uniform float blur;" +
-                "varying vec2 textureCoordinate;" +
-                "void main() {" +
-                "    if(dots == 0.0) {" +
-                "       gl_FragColor = texture2D(inputImageTexture, textureCoordinate);" +
-                "       return;" +
-                "    } " +
-                "    float dotSize = 1.0/dots;" +
-                "    vec2 samplePos = textureCoordinate - mod(textureCoordinate, dotSize) + 0.5 * dotSize;" +
-                "    float distanceFromSamplePoint = distance(samplePos, textureCoordinate);" +
-                "    vec4 col = texture2D(inputImageTexture, samplePos);" +
-                "    gl_FragColor = mix(col, vec4(0.0), smoothstep(dotSize * size, dotSize *(size + blur), distanceFromSamplePoint));" +
-                "}"
     }
 }

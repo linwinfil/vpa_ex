@@ -1,10 +1,13 @@
 package com.at.lottie.gpu.gl
 
 import android.opengl.GLES20
+import androidx.annotation.FloatRange
 import com.at.lottie.IFilter
+import com.at.lottie.R
+import com.at.lottie.raw2String
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
 
-class RainbowFilter : BaseGlitchFilter(FRAGMENT_SHADER), IFilter {
+class RainbowFilter : BaseGlitchFilter(R.raw.rainbow_frag_shader.raw2String()), IFilter {
     private var amountUniform = 0
     private var offsetUniform = 0
     override fun onInit() {
@@ -21,6 +24,14 @@ class RainbowFilter : BaseGlitchFilter(FRAGMENT_SHADER), IFilter {
         }
     }
 
+    fun setAmount(@FloatRange(from = 0.0, to = 0.8) amount: Float) {
+        runOnDraw { GLES20.glUniform1f(amountUniform, amount) }
+    }
+
+    fun setOffset(@FloatRange(from = 0.0, to = 2.0) offset: Float) {
+        runOnDraw { GLES20.glUniform1f(offsetUniform, offset) }
+    }
+
     override fun setTime(time: Float) {
         super.setTime(time)
     }
@@ -30,27 +41,6 @@ class RainbowFilter : BaseGlitchFilter(FRAGMENT_SHADER), IFilter {
             GLES20.glUniform1f(amountUniform, intensity)
             GLES20.glUniform1f(offsetUniform, intensity)
         }
-    }
-
-    companion object {
-        private const val FRAGMENT_SHADER = "" +
-                "precision highp float;" +
-                "uniform sampler2D inputImageTexture;" +
-                "uniform float amount;" +
-                "uniform float offset;" +
-                "uniform float time;" +
-                "varying vec2 textureCoordinate;" +
-                "vec3 rainbow2( in float t ){" +
-                "    vec3 d = vec3(0.0,0.33,0.67);" +
-                "    return 0.5 + 0.5*cos( 6.28318*(t+d) );" +
-                "}" +
-                "void main() {" +
-                "    vec2 p = textureCoordinate;" +
-                "    vec3 origCol = texture2D( inputImageTexture, p ).rgb;" +
-                "    vec2 off = texture2D( inputImageTexture, p ).rg - 0.5;p += off * offset;vec3 rb = rainbow2( (p.x + p.y + time * 2.0) * 0.5);" +
-                "    vec3 col = mix(origCol,rb,amount);" +
-                "    gl_FragColor = vec4(col, 1.0);" +
-                "}"
     }
 
     override fun getFilter(): GPUImageFilter = this

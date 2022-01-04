@@ -11,7 +11,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.LinearInterpolator
-import android.widget.Filterable
 import android.widget.SeekBar
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -30,7 +29,8 @@ import kotlin.math.roundToInt
 class FilterAmount<F : BaseGlitchFilter>(
     val filter: F,
     val fname: String,
-    var argsCall: ((F, String, Float) -> Unit)? = null
+    var argsCall: ((F, String, Float) -> Unit)? = null,
+    var renderView: (() -> Unit)? = null
 ) : Serializable {
     val args = mutableListOf<RangeArgs>()
     fun addArg(arg: RangeArgs) = apply { args.add(arg) }
@@ -48,11 +48,13 @@ class FilterAmount<F : BaseGlitchFilter>(
         args.find { it.argName == argName }?.apply {
             this.argValue = getArgValue(scalePr)
             this@FilterAmount.argsCall?.invoke(filter, argName, argValue)
+            this@FilterAmount.renderView?.invoke()
         }
     }
 
     fun argValue(argName: String, argValue: Float) {
         this@FilterAmount.argsCall?.invoke(filter, argName, argValue)
+        this@FilterAmount.renderView?.invoke()
     }
 
 }
@@ -93,6 +95,7 @@ data class RangeArgs(
 class SampleGpuViewActivity : AppCompatActivity() {
 
     companion object {
+        var filter: FilterAmount<*>? = null
         private const val TAG = "SampleGpuViewActivity"
     }
 
@@ -104,81 +107,8 @@ class SampleGpuViewActivity : AppCompatActivity() {
     private val recyclerView get() = bind.recycler
 
 
-    private val getFilter /*by lazy { intent.getSerializableExtra("filter") as FilterAmount<*> }*/
-        get() = list[0]
+    private val getFilter: FilterAmount<*> by lazy { filter!! }
 
-    private val list = mutableListOf<FilterAmount<*>>().apply {
-//        add(FilterAmount(VignetteFilter(), "Vignette", { f, n, v ->
-//            when (n) {
-//                "offset" -> {
-//                    f.setOffset(v);gpuView.requestRender()
-//                }
-//                "darkness" -> {
-//                    f.setDarkness(v);gpuView.requestRender()
-//                }
-//            }
-//        }).apply {
-//            addArg(RangeArgs("offset", 0, 200, 2));addArg(
-//            RangeArgs(
-//                "darkness",
-//                0,
-//                200,
-//                2
-//            ))
-//        })
-
-
-//        add(FilterAmount(TiltShiftFilter(), "Tilt Shift", { f, n, v ->
-//            when (n) {
-//                "amount" -> {
-//                    f.setAmount(v);gpuView.requestRender()
-//                }
-//                "position" -> {
-//                    f.setPosition(v);gpuView.requestRender()
-//                }
-//            }
-//        }).apply {
-//            addArg(RangeArgs("amount", 0, 200, 4));addArg(RangeArgs("position", 0, 100, 2))
-//        })
-
-
-//        add(FilterAmount(VHSFilter(), "VHS", { f, n, v ->
-//            when (n) {
-//                "time" -> {
-//                    f.setTime(v);gpuView.requestRender()
-//                }
-//            }
-//        }).apply { isAutoValue = true;addArg(RangeArgs("time", 0, 1000, 1)) })
-
-//        add(FilterAmount(JitterFilter(), "Jitter(Glitch)", { f, n, v ->
-//            when (n) {
-//                "time" -> {
-//                    f.setTime(v);gpuView.requestRender()
-//                }
-//                "amount" -> {
-//                    f.setAmount(v);gpuView.requestRender()
-//                }
-//                "speed" -> {
-//                    f.setSpeed(v);gpuView.requestRender()
-//                }
-//            }
-//        }).apply {
-//            isAutoValue = true;
-//            addArg("time", 0, 100, 2)
-//            addArg("amount", 0, 50, 2)
-//            addArg("speed", 0, 100, 2)
-//        })
-
-
-        add(FilterAmount(RGBShiftFilter(), "RGB Shift", { f, n, v -> when(n) {
-            "angle" -> {f.setAngle(v);gpuView.requestRender()}
-            "amount" -> {f.setAmount(v);gpuView.requestRender()}
-        } }).apply {
-            isAutoValue = true
-            addArg("angle", 0, 628, 2)
-            addArg("amount", 0, 100, 3)
-        })
-    }
 
 
     private val getContent =
@@ -216,8 +146,8 @@ class SampleGpuViewActivity : AppCompatActivity() {
         bind = ActivitySampleGpuViewBinding.inflate(layoutInflater)
         setContentView(bind.root)
 
-        gpuView.postOnAnimation {
-            onRenderFilter()
+        getFilter.renderView = {
+            gpuView.requestRender()
         }
 
         btnLoadImg.setOnClickListener { getContent.launch("image/*") }
@@ -233,6 +163,23 @@ class SampleGpuViewActivity : AppCompatActivity() {
 
         recyclerView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
         recyclerView.adapter = Adapter(getFilter)
+
+        gpuView.postOnAnimation {
+            onRenderFilter()
+        }
+    }
+
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        filter = null
+        getFilter.renderView = null
+    }
+
+    override fun finish() {
+        super.finish()
+        filter = null
+        getFilter.renderView = null
     }
 
 
@@ -313,6 +260,8 @@ class SampleGpuViewActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        getFilter.renderView = null
+        filter = null
         valueAnimator.removeAllUpdateListeners()
         valueAnimator.cancel()
         getContent.unregister()

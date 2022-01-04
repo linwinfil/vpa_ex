@@ -76,6 +76,12 @@
             android:layout_height="wrap_content"
             android:text="sample gpu image view"
             android:textAllCaps="false" />
+        <Button
+            android:id="@+id/btn10"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="sample opencv"
+            android:textAllCaps="false" />
 
     </LinearLayout>
 
