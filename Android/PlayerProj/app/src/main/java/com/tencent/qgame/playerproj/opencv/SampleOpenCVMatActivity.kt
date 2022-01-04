@@ -6,26 +6,20 @@ import android.graphics.Canvas
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.provider.MediaStore
 import android.widget.SeekBar
-import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.widget.AppCompatButton
+import com.at.lottie.utils.logi
 import com.blankj.utilcode.util.ResourceUtils
 import com.blankj.utilcode.util.ToastUtils
 import com.blankj.utilcode.util.UriUtils
 import com.tencent.qgame.playerproj.R
 import com.tencent.qgame.playerproj.databinding.ActivitySampleOpenCvmatBinding
+import org.opencv.android.Constant
 import org.opencv.android.Utils
-import org.opencv.core.CvType
-import org.opencv.core.Mat
-import org.opencv.core.MatOfRect
-import org.opencv.core.Scalar
-import org.opencv.imgcodecs.Imgcodecs
+import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
 import org.opencv.objdetect.CascadeClassifier
 import java.io.File
-import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
 
 class SampleOpenCVMatActivity : AppCompatActivity() {
@@ -83,8 +77,8 @@ class SampleOpenCVMatActivity : AppCompatActivity() {
         getContent.unregister()
     }
 
+    /** !()[https://juejin.cn/post/7037842278580387877#heading-5] */
     private fun applyDetectFaces() {
-
         val lbpcascade_frontalface = File(cacheDir, "lbpcascade_frontalface.xml")
         ResourceUtils.copyFileFromRaw(R.raw.lbpcascade_frontalface, lbpcascade_frontalface.absolutePath)
         val cascadeClassifier = CascadeClassifier(lbpcascade_frontalface.absolutePath)
@@ -99,9 +93,21 @@ class SampleOpenCVMatActivity : AppCompatActivity() {
         val grayMat = Mat(srcMat.width(), srcMat.height(), srcMat.type())
         Imgproc.cvtColor(srcMat, grayMat, Imgproc.COLOR_RGBA2GRAY)
 
-        val matOfRect = MatOfRect()
-//        https://juejin.cn/post/7037842278580387877#heading-5
-//        cascadeClassifier.detectMultiScale(grayMat, matOfRect, )
+        val detectSize = (grayMat.rows() * 0.2f).toDouble()
+        val matFaces = MatOfRect()
+        cascadeClassifier.detectMultiScale(grayMat, //灰度图像加快检测
+           matFaces, //被检测物体的矩形框向量组
+           1.1, //表示在前后两次相继的扫描中，搜索窗口的比例系数。默认为1.1即每次搜索窗口依次扩大10%;
+           3,//表示构成检测目标的相邻矩形的最小个数(默认为3个)。
+           0, //如果设置为 CV_HAAR_DO_CANNY_PRUNING，那么函数将会使用Canny边缘检测来排除边缘过多或过少的区域， 因此这些区域通常不会是人脸所在区域
+           Size(detectSize, detectSize), Size()//minSize和maxSize用来限制得到的目标区域的范围。
+       )
+        logi(Constant.TAG, "matFaces:${matFaces.size()}")
+
+        matFaces.toArray().forEach {
+            val faceROI: Mat = grayMat.submat(it)
+        }
+
     }
 
     private fun applyGray(srcMat: Mat) {
