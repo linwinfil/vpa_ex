@@ -19,10 +19,10 @@
         app:srcCompat="@drawable/ic_launcher_background" />
 
     <androidx.appcompat.widget.AppCompatImageView
-        android:scaleType="fitCenter"
         android:id="@+id/iv_preview2"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:scaleType="centerCrop"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/iv_preview"
@@ -49,6 +49,17 @@
         app:layout_constraintStart_toEndOf="@id/btn_generate"
         app:layout_constraintTop_toBottomOf="@id/iv_preview"
         tools:ignore="HardcodedText" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_gray_img"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="gray image"
+        android:textAllCaps="false"
+        app:layout_constraintStart_toEndOf="@id/btn_gray"
+        app:layout_constraintTop_toBottomOf="@id/iv_preview"
+        tools:ignore="HardcodedText" />
+
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_detect_faces"
         android:layout_width="wrap_content"
