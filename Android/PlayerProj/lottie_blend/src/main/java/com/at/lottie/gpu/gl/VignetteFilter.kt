@@ -13,6 +13,10 @@ import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
 class VignetteFilter : BaseGlitchFilter(R.raw.vignette_frag_shader.raw2String()), IFilter {
     private var offsetUniform: Int = 0
     private var darknessUniform: Int = 0
+
+    private var darknessFloat: Float = 0f
+    private var offsetFloat: Float = 0f
+
     override fun onInit() {
         super.onInit()
         offsetUniform = GLES20.glGetUniformLocation(program, "offset")
@@ -26,9 +30,18 @@ class VignetteFilter : BaseGlitchFilter(R.raw.vignette_frag_shader.raw2String())
         }
     }
 
+    fun setOffsetValue(offset: Float) {
+        offsetFloat = offset
+    }
+
+    fun setDarknessValue(darkness: Float) {
+        darknessFloat = darkness
+    }
+
     /** 晕影范围 */
     fun setOffset(offset: Float, factor: Float = 1f) {
         runOnDraw {
+            offsetFloat = offset
             GLES20.glUniform1f(offsetUniform, offset * factor)
         }
     }
@@ -36,6 +49,7 @@ class VignetteFilter : BaseGlitchFilter(R.raw.vignette_frag_shader.raw2String())
     /** 晕影力度 */
     fun setDarkness(darkness: Float, factor: Float = 1f) {
         runOnDraw {
+            darknessFloat = darkness
             GLES20.glUniform1f(darknessUniform, darkness * factor)
         }
     }

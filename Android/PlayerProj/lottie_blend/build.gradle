@@ -35,15 +35,16 @@ android {
 }
 
 dependencies {
-    api project(path: ':opencv_sdk')
+    // api project(path: ':opencv_sdk')
     implementation rootProject.ext.dependencies['ktx_core']
+    implementation rootProject.ext.dependencies['ktx_viewModel']
     implementation rootProject.ext.dependencies['androidx.appcompat']
     implementation rootProject.ext.dependencies['android.material']
-    implementation rootProject.ext.dependencies['lottie']
-    implementation rootProject.ext.dependencies['ktx_viewModel']
     implementation rootProject.ext.dependencies['utilcodex']
-    implementation rootProject.ext.dependencies['ffmpeg_command_lite']
-    api rootProject.ext.dependencies['gson']
+    implementation 'com.airbnb.android:lottie:5.2.0'
+    implementation 'com.github.AnJoiner:FFmpegCommand:1.2.2'
+    api 'com.google.code.gson:gson:2.9.0'
+    api 'com.squareup.okio:okio:3.1.0'
     api 'jp.co.cyberagent.android:gpuimage:2.1.0'
 }
 repositories {

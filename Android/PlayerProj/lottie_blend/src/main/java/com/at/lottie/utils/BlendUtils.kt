@@ -3,10 +3,14 @@ package com.at.lottie.utils
 import android.content.Context
 import android.graphics.*
 import android.net.Uri
-import android.text.Html
 import com.at.lottie.Blend
+import com.blankj.utilcode.util.FileUtils
 import com.blankj.utilcode.util.ResourceUtils
+import com.blankj.utilcode.util.Utils
+import com.blankj.utilcode.util.ZipUtils
 import com.google.gson.Gson
+import okio.buffer
+import okio.source
 import java.io.File
 import kotlin.math.roundToInt
 
@@ -18,6 +22,38 @@ public fun <E> MutableList<E>.append(e: E): MutableList<E> = apply { add(e) }
 
 object BlendUtils {
 
+    /**
+     * todo 解析zip包文件
+     */
+    fun parseBlendFile(filePath: String): Blend? {
+        if (!FileUtils.isFileExists(filePath) || !filePath.endsWith(".zip", true)) return null
+        val zipName = filePath.substringAfterLast("/").substringBeforeLast(".")
+        val dstFile = File(Utils.getApp().cacheDir, zipName).apply {
+            deleteRecursively()
+        }
+        return runCatching {
+            ZipUtils.unzipFile(File(filePath), dstFile)?.takeIf { it.isNotEmpty() }?.let {
+                Gson().fromJson(
+                    File(dstFile, "blend.json").source().buffer().readUtf8(),
+                    Blend::class.java
+                )
+            }?.also { blend ->
+                blend.audio?.apply {
+                    if (data.isNotEmpty()) {
+                        data = File(dstFile, data).absolutePath
+                    }
+                }
+                blend.bg?.apply {
+                    if (data.isNotEmpty()) data = File(dstFile, data).absolutePath
+                    if (images.isNotEmpty()) images = File(dstFile, images).absolutePath
+                }
+                blend.fg?.apply {
+                    if (data.isNotEmpty()) data = File(dstFile, data).absolutePath
+                    if (images.isNotEmpty()) images = File(dstFile, images).absolutePath
+                }
+            }
+        }.getOrNull()
+    }
 
     /**
      * 解析asset下blend.json

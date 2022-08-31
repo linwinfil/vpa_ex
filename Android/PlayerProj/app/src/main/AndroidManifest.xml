@@ -60,6 +60,7 @@
         <activity
             android:name=".player.AnimSpecialSizeDemoActivity"
             android:screenOrientation="portrait" />
+        <activity android:name=".SimpleLottieActivity" />
     </application>
 
 </manifest>

@@ -72,6 +72,9 @@ class MainActivity : Activity() {
         bind.btn10.setOnClickListener {
             startActivity(Intent(this, SampleOpenCVMatActivity::class.java))
         }
+        bind.btn11.setOnClickListener {
+            startActivity(Intent(this, SimpleLottieActivity::class.java))
+        }
 
         //bind.btn9.performClick()
     }

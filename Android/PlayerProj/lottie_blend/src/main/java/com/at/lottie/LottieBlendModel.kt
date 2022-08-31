@@ -23,9 +23,15 @@ import com.at.lottie.gpu.PixelBufferImpl
 import com.at.lottie.utils.BlendUtils
 import com.at.lottie.utils.logd
 import com.at.lottie.utils.logi
-import com.blankj.utilcode.util.*
+import com.blankj.utilcode.util.FileUtils
+import com.blankj.utilcode.util.ImageUtils
+import com.blankj.utilcode.util.ResourceUtils
+import com.blankj.utilcode.util.Utils
 import com.coder.ffmpeg.call.IFFmpegCallBack
 import com.coder.ffmpeg.jni.FFmpegCommand
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import java.io.File
 import kotlin.math.max
 import kotlin.math.min
@@ -49,7 +55,8 @@ class FramePicture(val frameIndex: Int, val type: FrameType) {
 
 }
 
-internal fun Canvas.clear() = drawColor(0, PorterDuff.Mode.CLEAR)
+internal fun Canvas.clear() = drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+inline fun <reified State> createChannel(): Channel<State> = Channel(capacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
 class LottieBlendModel(application: Application) : AndroidViewModel(application) {
     companion object {
@@ -73,6 +80,9 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
 
     /** 序列帧混合 */
     val blendFramesLiveData by lazy { MutableLiveData<Bitmap>() }
+
+    private val _blendFrameFlow = createChannel<Bitmap>()
+    val bendFrameFlow = _blendFrameFlow.receiveAsFlow()
 
     /** 执行进度  */
     val progressLiveData by lazy { MutableLiveData<BlendState>() }
@@ -124,7 +134,60 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
         stopFlag = stopFlag.or(1 shl flag)
     }
 
-    private var animator: ValueAnimator? = null
+    private val animator: ValueAnimator = ValueAnimator.ofFloat(0f, 1f).also {
+        it.interpolator = LinearInterpolator()
+    }
+    private fun ValueAnimator.reset() {
+        removeAllListeners()
+        removeAllUpdateListeners()
+        cancel()
+    }
+    private val animatorUpdateListener = ValueAnimator.AnimatorUpdateListener {
+        if (stopBlend || !isScanningFrame) {
+            postOnCancel()
+            stopScanFramesStep()
+            return@AnimatorUpdateListener
+        }
+        isScanningFrame = true
+        val value = it.animatedValue as Float
+        val elapseT = SystemClock.elapsedRealtime()
+        lottieViewBg.progress = value
+        val frameBg = lottieViewBg.frame
+        pictureBgArr.add(FramePicture(frameBg, FrameType.Background).apply { drawOn(lottieViewBg) })
+
+        val frameFg = if (isLoadedFgComposition) {
+            lottieViewFg.progress = value
+            val frameFg = lottieViewFg.frame
+            pictureFgArr.add(FramePicture(frameFg, FrameType.Foreground).apply { drawOn(lottieViewFg) })
+            frameFg
+        } else 0
+
+        logd(TAG, "bgFrame:$frameBg, fgFrame:$frameFg, sync times:${SystemClock.elapsedRealtime() - elapseT}ms")
+        scanFramesLiveData.postValue(lottieViewBg.frame)
+        postOnProgress(STEP_DRAW_1, (value * 100).roundToInt())
+    }
+    private val animatorListener = object : AnimatorListenerAdapter() {
+        override fun onAnimationStart(animation: Animator) {
+            isScanningFrame = true
+            pictureBgArr.clear()
+            pictureFgArr.clear()
+        }
+
+        override fun onAnimationCancel(animation: Animator?) {
+            isScanningFrame = false
+        }
+
+        override fun onAnimationEnd(animation: Animator) {
+            (animation as ValueAnimator).reset()
+            isScanningFrame = false
+            if (stopBlend) {
+                postOnCancel()
+                stopBlend = false
+            } else {
+                startBlendFramesStep()
+            }
+        }
+    }
 
     private val blendThread: HandlerHolder by lazy {
         HandlerHolder(null, null).apply { createThread("blen_frame_thread") }
@@ -299,7 +362,7 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
     // @WorkerThread
     private val mergeFramesRunnable = Runnable {
         System.gc()
-        FileUtils.delete(tempOutputPath)
+        com.blankj.utilcode.util.FileUtils.delete(tempOutputPath)
 
         synchronized(lock) {
             if (stopBlend) {
@@ -423,6 +486,12 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
             frameFilterDelegates.add(filter)
         }
     }
+    fun addFrameFilterDelegate(filters:List<FrameFilter>) = apply {
+        filters.forEach {
+            it.checkArgs()
+            frameFilterDelegates.add(it)
+        }
+    }
     fun removeAllFrameFilterDelegate() = apply { frameFilterDelegates.clear() }
 
     fun addVideoAudioDelegate(delegate: AudioDelegate) = apply { audioDelegate.add(delegate) }
@@ -449,12 +518,7 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
     }
 
     private fun stopScanFramesStep() {
-        animator?.apply {
-            removeAllListeners()
-            removeAllUpdateListeners()
-            cancel()
-        }
-        animator = null
+        animator.reset()
     }
 
     @MainThread
@@ -467,57 +531,10 @@ class LottieBlendModel(application: Application) : AndroidViewModel(application)
     fun startBlend() {
         if (!isLoadedBgComposition || isScanningFrame) return
         stopScanFramesStep()
-        animator = ValueAnimator.ofFloat(0f, 1f).apply {
+        animator.apply {
             duration = this@LottieBlendModel.duration.toLong()
-            interpolator = LinearInterpolator()
-            addUpdateListener {
-                if (stopBlend || !isScanningFrame) {
-                    postOnCancel()
-                    stopScanFramesStep()
-                    return@addUpdateListener
-                }
-                isScanningFrame = true
-                val value = it.animatedValue as Float
-                val elapseT = SystemClock.elapsedRealtime()
-                lottieViewBg.progress = value
-                val frameBg = lottieViewBg.frame
-                pictureBgArr.add(FramePicture(frameBg, FrameType.Background).apply { drawOn(lottieViewBg) })
-
-                val frameFg = if (isLoadedFgComposition) {
-                    lottieViewFg.progress = value
-                    val frameFg = lottieViewFg.frame
-                    pictureFgArr.add(FramePicture(frameFg, FrameType.Foreground).apply { drawOn(lottieViewFg) })
-                    frameFg
-                } else 0
-
-                logd(TAG, "bgFrame:$frameBg, fgFrame:$frameFg, sync times:${SystemClock.elapsedRealtime() - elapseT}ms")
-                scanFramesLiveData.postValue(lottieViewBg.frame)
-                postOnProgress(STEP_DRAW_1, (value * 100).roundToInt())
-            }
-            addListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationStart(animation: Animator) {
-                    isScanningFrame = true
-                    pictureBgArr.clear()
-                    pictureFgArr.clear()
-                }
-
-                override fun onAnimationCancel(animation: Animator?) {
-                    isScanningFrame = false
-                }
-
-                override fun onAnimationEnd(animation: Animator) {
-                    animation.removeAllListeners()
-                    (animation as ValueAnimator).removeAllUpdateListeners()
-                    animator = null
-                    isScanningFrame = false
-                    if (stopBlend) {
-                        postOnCancel()
-                        stopBlend = false
-                    } else {
-                        startBlendFramesStep()
-                    }
-                }
-            })
+            addUpdateListener(animatorUpdateListener)
+            addListener(animatorListener)
             postOnStart()
             start()
         }

@@ -35,7 +35,7 @@ dependencies {
         exclude module: 'annotations'
     }
     api 'jp.co.cyberagent.android:gpuimage:2.1.0'
-    api "com.squareup.okio:okio:3.0.0"
+    api "com.squareup.okio:okio:3.1.0"
 
 }
 
