@@ -75,6 +75,9 @@ class MainActivity : Activity() {
         bind.btn11.setOnClickListener {
             startActivity(Intent(this, SimpleLottieActivity::class.java))
         }
+        bind.btn12.setOnClickListener {
+            startActivity(Intent(this, SimpleFaceDetectActivity::class.java))
+        }
 
         //bind.btn9.performClick()
     }

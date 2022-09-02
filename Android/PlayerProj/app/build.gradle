@@ -64,4 +64,9 @@ dependencies {
 
     implementation project(path: ':opencv_sdk')
 
+    //face detector
+    implementation 'com.google.mlkit:face-detection:16.1.5'
+    //selfie segmentation
+    implementation 'com.google.mlkit:segmentation-selfie:16.0.0-beta4'
+
 }
