@@ -2,17 +2,16 @@ package com.tencent.qgame.playerproj
 
 import android.graphics.*
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Size
 import android.view.View
 import androidx.annotation.WorkerThread
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.graphics.BitmapCompat
 import androidx.lifecycle.coroutineScope
-import com.airbnb.lottie.animation.keyframe.MaskKeyframeAnimation
 import com.at.lottie.utils.logd
 import com.at.lottie.utils.loge
 import com.blankj.utilcode.util.FileUtils
-import com.blankj.utilcode.util.ImageUtils
 import com.blankj.utilcode.util.ResourceUtils
 import com.blankj.utilcode.util.ToastUtils
 import com.tencent.qgame.playerproj.databinding.ActivitySampleMaskColorBinding
@@ -25,7 +24,6 @@ import java.nio.IntBuffer
 import java.util.*
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.roundToInt
 import kotlin.system.measureTimeMillis
 
 class SampleMaskColorActivity : AppCompatActivity() {
@@ -47,14 +45,17 @@ class SampleMaskColorActivity : AppCompatActivity() {
 
     }
 
-    private val mvcolor =  "mvcolor_2"
-    private val mvmask =  "mvmask_2"
-    private val mvbg =  "mvbg_2"
-    private val endFrames = if (mvcolor == "mvcolor_2") 191 else 240
+    private val mv_type = 2
+    private val mvcolor =  "mvcolor_${mv_type}"
+    private val mvmask =  "mvmask_${mv_type}"
+    private val mvbg =  "mvbg_${mv_type}"
+    private val mvalpha =  "mvalpha_${mv_type}"
+    private val endFrames = if (mvcolor.contains("_$mv_type")) 191 else 240
     private val tempCache by lazy { File(this.cacheDir, "mask") }
     private val mvcolorCache by lazy { File(tempCache, mvcolor) }
     private val mvmaskCache by lazy { File(tempCache, mvmask) }
     private val mvbgCache by lazy { File(tempCache, mvbg) }
+    private val mvalphaCache by lazy { File(tempCache, mvalpha) }
     private val tempResult by lazy { File(tempCache, "result") }
     private val img_suffix = "img_%03d"
     private fun startCpoyMask() {
@@ -72,7 +73,11 @@ class SampleMaskColorActivity : AppCompatActivity() {
                     mvbgCache.deleteRecursively()
                     ResourceUtils.copyFileFromAssets(mvbg, mvbgCache.absolutePath)
                 }
-                asyncColor.await() && asyncMask.await() && asyncBg.await()
+                val asyncAlpha = async {
+                    mvalphaCache.deleteRecursively()
+                    ResourceUtils.copyFileFromAssets(mvalpha, mvalphaCache.absolutePath)
+                }
+                asyncColor.await() && asyncMask.await() && asyncBg.await() && asyncAlpha.await()
             }
             ToastUtils.showShort("copy mask completed!!!")
             logd(TAG, "copyResult:$copyResult")
@@ -81,6 +86,7 @@ class SampleMaskColorActivity : AppCompatActivity() {
     }
 
     var decodeByte = true
+    val decodePng = false
     @WorkerThread private fun startMaskColor() {
         lifecycle.coroutineScope.launch {
             tempResult.deleteRecursively()
@@ -93,45 +99,60 @@ class SampleMaskColorActivity : AppCompatActivity() {
                 val size = Size(720, 1280)
                 val bufferSize: Int = size.width * size.height * 4
                 var bitmap: Bitmap? = null
-                var tempBmp :Bitmap? = null
-                var canvas: Canvas? = null
+                var tempBmp :Bitmap = Bitmap.createBitmap(size.width, size.height, Bitmap.Config.ARGB_8888)
+                val tempCanvas = Canvas(tempBmp)
                 val dstOut = PorterDuffXfermode(PorterDuff.Mode.DST_OUT)
+                val picture = Picture()
                 decodeByte = !decodeByte
                 loge(TAG, "decodeByte:$decodeByte")
                 val costime = measureTimeMillis {
                     for (index in rangeTo) {
                         val times = measureTimeMillis {
                             val imgIndex = index
-                            val color_path = "${mvcolorCache.absolutePath}/${String.format(img_suffix, imgIndex)}.jpg"
-                            if (decodeByte) {
-                                // colorBmpByteArray = resetByteArray(colorBmpByteArray, bufferSize)
-                                // colorBmp = resetBmp(colorBmp, size, decodeFileStream(color_path, colorBmpByteArray!!))
-                                val bytes = color_path.steamBytes()
-                                colorBmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                            } else {
-                                colorBmp = BitmapFactory.decodeFile(color_path, decodeOP)
-                            }
-                            val mask_path = "${mvmaskCache.absolutePath}/${String.format(img_suffix, imgIndex)}.jpg"
-                            if (decodeByte) {
-                                // maskBmpByteArray = resetByteArray(maskBmpByteArray, bufferSize)
-                                // maskBmp = resetBmp(maskBmp, size, decodeFileStream(mask_path, maskBmpByteArray!!))
 
-                                val bytes = mask_path.steamBytes()
-                                maskBmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                            if (!decodePng) {
+                                val color_path = "${mvcolorCache.absolutePath}/${String.format(img_suffix, imgIndex)}.jpg"
+                                if (decodeByte) {
+                                    val bytes = color_path.steamBytes()
+                                    colorBmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                                } else {
+                                    colorBmp = BitmapFactory.decodeFile(color_path, decodeOP)
+                                }
+                                val mask_path = "${mvmaskCache.absolutePath}/${String.format(img_suffix, imgIndex)}.jpg"
+                                if (decodeByte) {
+                                    val bytes = mask_path.steamBytes()
+                                    maskBmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                                } else {
+                                    maskBmp = BitmapFactory.decodeFile(mask_path, decodeOP)
+                                }
+                                bitmap = getMaskAlphaToDst(index, maskBmp!!, colorBmp!!)
                             } else {
-                                maskBmp = BitmapFactory.decodeFile(mask_path, decodeOP)
+                                val alpha_path = "${mvalphaCache.absolutePath}/${String.format(img_suffix, imgIndex)}.png"
+                                if (decodeByte) {
+                                    val bytes = alpha_path.steamBytes()
+                                    alphaBmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                                } else {
+                                    alphaBmp = BitmapFactory.decodeFile(alpha_path, decodeOP)
+                                }
+                                bitmap = alphaBmp
                             }
-                            bitmap = getMaskAlphaToDst(index, maskBmp!!, colorBmp!!)
+
+                            val drawBg = true
                             val bg_path = "${mvbgCache.absolutePath}/${String.format(img_suffix, imgIndex)}.jpg"
-                            if (FileUtils.isFileExists(bg_path)) {
+                            if (drawBg && FileUtils.isFileExists(bg_path)) {
                                 val bytes = bg_path.steamBytes()
                                 val bgbmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, decodeOP)
-                                Canvas(bgbmp).also {
-                                    it.drawBitmap(bitmap!!, 0f, 0f, null)
-                                }
-                                bitmap = bgbmp
-                            }
 
+                                val canvas = picture.beginRecording(size.width, size.height)
+                                canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+                                canvas.drawBitmap(bgbmp, 0f, 0f, null)
+                                // paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)
+                                canvas.drawBitmap(bitmap!!, 0f, 0f, paint)
+                                picture.endRecording()
+                                picture.draw(tempCanvas)
+
+                                bitmap = tempBmp
+                            }
                             // val savePath = "$tempResult/${String.format(img_suffix, imgIndex)}.jpeg"
                             // ImageUtils.save(bitmap, savePath, Bitmap.CompressFormat.JPEG, 100, false)
                             runOnUiThread {
@@ -143,6 +164,7 @@ class SampleMaskColorActivity : AppCompatActivity() {
                                 }
                                 ivPreview.setImageBitmap(bitmap)
                             }
+                            delay(16)
 
                         }
                         logd(TAG, "$index -> mask color:$times")
@@ -165,6 +187,7 @@ class SampleMaskColorActivity : AppCompatActivity() {
     private var maskBmpByteArray: ByteArray? = null
     private var colorBmp:Bitmap? = null
     private var maskBmp:Bitmap? = null
+    private var alphaBmp:Bitmap? = null
 
     private fun decodeFileStream(path: String, byteArray: ByteArray): ByteArray {
         File(path).inputStream().use {
@@ -203,23 +226,35 @@ class SampleMaskColorActivity : AppCompatActivity() {
         val maskSize = Size(mask.width, mask.height)
         if (colorSize != maskSize) throw IllegalStateException("size diff in $index")
 
-        colorIntArray = resetIntArray(colorIntArray, color.width * color.height)
-        color.copyPixelsToBuffer(IntBuffer.wrap(colorIntArray))
-        color.recycle()
-        maskIntArray = resetIntArray(maskIntArray, maskSize.width * maskSize.height)
-        mask.copyPixelsToBuffer(IntBuffer.wrap(maskIntArray))
+        val useColor = false
 
-        dstBmp = dstBmp?.also { it.eraseColor(0) } ?:Bitmap.createBitmap(color.width, color.height, Bitmap.Config.ARGB_8888)
-        colorIntArray!!.forEachIndexed {  colorIndex, argb ->
+        colorIntArray = resetIntArray(colorIntArray, color.width * color.height)
+        color.copyPixelsToBuffer(IntBuffer.wrap(colorIntArray).rewind())
+        if (!useColor) color.recycle()
+
+        maskIntArray = resetIntArray(maskIntArray, maskSize.width * maskSize.height)
+        mask.copyPixelsToBuffer(IntBuffer.wrap(maskIntArray).rewind())
+        mask.recycle()
+
+
+        colorIntArray!!.forEachIndexed { colorIndex, argb ->
             val alpha = Color.red(maskIntArray!![colorIndex])
             val red = Color.red(argb)
             val green = Color.green(argb)
             val blue = Color.blue(argb)
-            colorIntArray!![colorIndex] = Color.argb(alpha, red, green, blue)
+            val newColor = Color.argb(alpha, red, green, blue)
 
+            colorIntArray!![colorIndex] = newColor
         }
-        dstBmp!!.copyPixelsFromBuffer(IntBuffer.wrap(colorIntArray))
-        return dstBmp!!
+
+        if (!useColor) {
+            dstBmp = dstBmp?.also { it.eraseColor(0) } ?:Bitmap.createBitmap(color.width, color.height, Bitmap.Config.ARGB_8888)
+            dstBmp!!.copyPixelsFromBuffer(IntBuffer.wrap(colorIntArray).rewind())
+            return dstBmp!!
+        }else {
+            color.copyPixelsFromBuffer(IntBuffer.wrap(colorIntArray).rewind())
+            return color
+        }
     }
     private fun Float.fixcolor() = max(0, min(this.toInt(), 255))
 

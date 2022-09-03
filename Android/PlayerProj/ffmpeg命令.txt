@@ -1,0 +1,58 @@
+ffmpeg -i alpha.mp4 -i alpha_mask.mp4 -filter_complex [0]split[m][a];[m][a]alphamerge[keyed];[1][keyed]overlay=eof_action=endall result.mp4
+
+
+
+# 解序列帧 ok
+
+ffmpeg -y -i alpha_mask.mp4 -vf fps=30 -f image2 decode_mask_img\mvmask_%3d.jpg
+ffmpeg -y -i alpha_mask.mp4 -pix_fmt rgba -vf fps=30 -f image2 C:\Users\linmaoxin\Documents\blend_test\1\decode_mask_img\img_%3d.png
+
+
+# 视频解序列jpg jpg画质 -qscale:v 2到31（最差），建议2-5
+# 也可以改为 -q:v 1 
+# 可以增加 -qmin 1 -qmax 1
+ffmpeg -y -i Background.mp4 -vf fps=30 -qscale:v 2 -f image2 mvbg\mvbg_%3d.jpg
+
+
+# 解序列帧和压缩比例
+ffmpeg -y -i alpha.mp4 -vf fps=30 -s 540x960 -f image2 decode_color_img\mvcolor_%3d.jpg
+
+# 压缩图
+ffmpeg -i Einstein_500_459.jpg -vf scale=250:-1 Einstein_250.png
+
+# 压缩视频
+ffmpeg -i video_face_swap_01.mp4 -vf scale=540:960 video_face_swap_01_scale.mp4
+
+# png 转webp
+ffmpeg -i alpha\tinypng\img_%3d.png -c:v libwebp alpha\tinypng\webp\img_%3d.webp
+
+
+# 序列帧png转mov视频
+
+ffmpeg -y -f image2 -framerate 30 -i alpha\tinypng\img_%3d.png -vcodec png -crf 15 -b 3000k -preset slow alpha\tinypng\alpha_video.mov
+
+# 融合视频 ok
+
+ffmpeg -i alpha.mp4 -i alpha_mask.mp4 -filter_complex [0]split[m][a];[m][a]alphamerge[keyed];[1][keyed]overlay=eof_action=endall -b:v 2000k result.mp4
+
+
+# 融合mov透明视频 ok
+
+ffmpeg -i alpha.mp4 -i alpha_mask.mp4 -filter_complex [0]split[m][a];[m][a]alphamerge[keyed];[1][keyed]overlay=eof_action=endall -b:v 2000k result.mp4
+
+
+# 融合视频 todo
+
+ffmpeg -i alpha.mp4 -i alpha_mask.mp4 -pix_fmt rgba -vf fps=30 -filter_complex [0]split[m][a];[m][a]alphamerge[keyed];[1][keyed]overlay=eof_action=endall -f image2 C:\Users\linmaoxin\Documents\blend_test\1\decode_blend_img\img_%3d.png
+
+
+# 融合png
+ffmpeg -i decode_color_img\img_001.png -i decode_mask_img\img_001.png -filter_complex [0]split[m][a];[m][a]alphamerge[keyed];[1][keyed]overlay=eof_action=endall decode_blend_img\img_001.png
+
+
+
+
+ffmpeg -i video_sub_face_swap.mp4 -vf scale=480:480 video_sub_face_swap_scale.mp4
+
+
+ffmpeg -i template_time_002.mp4 -vf scale=540:960 template_time_002_scale.mp4
