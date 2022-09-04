@@ -1,17 +1,15 @@
 package com.tencent.qgame.playerproj
 
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.view.View
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import com.at.lottie.*
 import com.at.lottie.utils.BlendUtils
 import com.at.lottie.utils.logd
@@ -52,7 +50,7 @@ class SampleLottieBlendActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        model = ViewModelProviders.of(this).get(LottieBlendModel::class.java)
+        model = ViewModelProvider(this).get(LottieBlendModel::class.java)
         model.blend = lottieBlendView
         lottieBlendView.postOnAnimation {
 

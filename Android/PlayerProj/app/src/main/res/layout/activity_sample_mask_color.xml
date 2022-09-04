@@ -26,6 +26,34 @@
         app:layout_constraintStart_toEndOf="@id/btn_copy"
         app:layout_constraintTop_toTopOf="parent"
         tools:visibility="visible" />
+    <Button
+        android:id="@+id/btn_blend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="start blend picture"
+        android:textAllCaps="false"
+        android:visibility="visible"
+        app:layout_constraintStart_toEndOf="@id/btn_mask"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible" />
+    <Button
+        android:id="@+id/btn_10_bitmap"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="create 10*10 bitmap"
+        android:textAllCaps="false"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_copy" />
+
+    <Button
+        android:id="@+id/btn_mask_bg_dst"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="start mask bg dst"
+        android:textAllCaps="false"
+        app:layout_constraintStart_toEndOf="@id/btn_10_bitmap"
+        app:layout_constraintTop_toBottomOf="@id/btn_copy" />
+
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/iv_preview"
