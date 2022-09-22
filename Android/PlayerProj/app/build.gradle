@@ -64,6 +64,8 @@ dependencies {
 
     implementation project(path: ':opencv_sdk')
 
+    implementation 'com.github.bumptech.glide:glide:4.13.0'
+
     //face detector
     implementation 'com.google.mlkit:face-detection:16.1.5'
     //selfie segmentation

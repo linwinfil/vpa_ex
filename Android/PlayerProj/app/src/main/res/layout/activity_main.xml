@@ -8,95 +8,99 @@
     android:background="@android:color/white"
     tools:context=".MainActivity">
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:orientation="vertical">
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
-        <Button
-            android:id="@+id/btn1"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Simple Demo"
-            android:textAllCaps="false" />
+            android:layout_gravity="center"
+            android:orientation="vertical">
 
-        <Button
-            android:id="@+id/btn2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="VAPX Demo(融合动画)"
-            android:textAllCaps="false" />
+            <Button
+                android:id="@+id/btn1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Simple Demo"
+                android:textAllCaps="false" />
 
-        <Button
-            android:id="@+id/btn3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Active Demo(可变动画)"
-            android:textAllCaps="false" />
+            <Button
+                android:id="@+id/btn2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="VAPX Demo(融合动画)"
+                android:textAllCaps="false" />
 
-        <Button
-            android:id="@+id/btn4"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Special Size Demo"
-            android:textAllCaps="false" />
+            <Button
+                android:id="@+id/btn3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Active Demo(可变动画)"
+                android:textAllCaps="false" />
 
-        <Button
-            android:id="@+id/btn5"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="sample lottie animation"
-            android:textAllCaps="false" />
+            <Button
+                android:id="@+id/btn4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Special Size Demo"
+                android:textAllCaps="false" />
 
-        <Button
-            android:id="@+id/btn6"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="sample lottie blend"
-            android:textAllCaps="false" />
+            <Button
+                android:id="@+id/btn5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="sample lottie animation"
+                android:textAllCaps="false" />
 
-        <Button
-            android:id="@+id/btn7"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="sample mask color"
-            android:textAllCaps="false" />
+            <Button
+                android:id="@+id/btn6"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="sample lottie blend"
+                android:textAllCaps="false" />
 
-        <Button
-            android:id="@+id/btn8"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="sample aging blend"
-            android:textAllCaps="false" />
+            <Button
+                android:id="@+id/btn7"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="sample mask color"
+                android:textAllCaps="false" />
 
-        <Button
-            android:id="@+id/btn9"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="sample gpu image view"
-            android:textAllCaps="false" />
-        <Button
-            android:id="@+id/btn10"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="sample opencv"
-            android:textAllCaps="false" />
+            <Button
+                android:id="@+id/btn8"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="sample aging blend"
+                android:textAllCaps="false" />
 
-        <Button
-            android:id="@+id/btn11"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="sample lottie"
-            android:textAllCaps="false" />
-        <Button
-            android:id="@+id/btn12"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="sample mlkit face detect"
-            android:textAllCaps="false" />
+            <Button
+                android:id="@+id/btn9"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="sample gpu image view"
+                android:textAllCaps="false" />
+            <Button
+                android:id="@+id/btn10"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="sample opencv"
+                android:textAllCaps="false" />
 
-    </LinearLayout>
+            <Button
+                android:id="@+id/btn11"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="sample lottie"
+                android:textAllCaps="false" />
+            <Button
+                android:id="@+id/btn12"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="sample mlkit face detect"
+                android:textAllCaps="false" />
+        </LinearLayout>
+    </ScrollView>
 
 
     <androidx.appcompat.widget.AppCompatImageView

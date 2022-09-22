@@ -8,21 +8,29 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.SeekBar
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.lifecycleScope
+import com.at.lottie.utils.logd
 import com.at.lottie.utils.logi
 import com.blankj.utilcode.util.ResourceUtils
 import com.blankj.utilcode.util.ToastUtils
 import com.blankj.utilcode.util.UriUtils
 import com.tencent.qgame.playerproj.R
 import com.tencent.qgame.playerproj.databinding.ActivitySampleOpenCvmatBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.opencv.android.Constant
 import org.opencv.android.Utils
 import org.opencv.core.*
+import org.opencv.imgcodecs.Imgcodecs
 import org.opencv.imgproc.Imgproc
 import org.opencv.objdetect.CascadeClassifier
 import java.io.File
 import java.lang.IllegalStateException
 
 class SampleOpenCVMatActivity : AppCompatActivity() {
+    companion object {
+        private const val TAG = "SampleOpenCVMatActivity"
+    }
     lateinit var bind: ActivitySampleOpenCvmatBinding
 
     var scalarDoubles: DoubleArray = doubleArrayOf(0.0, 0.0, 0.0, 1.0)
@@ -64,6 +72,10 @@ class SampleOpenCVMatActivity : AppCompatActivity() {
             seekBar1.setOnSeekBarChangeListener(seekBarChangeListener)
             seekBar2.setOnSeekBarChangeListener(seekBarChangeListener)
             seekBar3.setOnSeekBarChangeListener(seekBarChangeListener)
+
+            btnLoadPng.setOnClickListener {
+                applyLoadImg()
+            }
         }
     }
 
@@ -168,4 +180,52 @@ class SampleOpenCVMatActivity : AppCompatActivity() {
                 bitmap = it
             }
         }
+
+
+    private fun applyLoadImg() {
+        lifecycleScope.launch(Dispatchers.Default) {
+            val cost = System.currentTimeMillis()
+            val color_name = "mvcolor_2/img_001.jpg"
+            val mask_name = "mvmask_2/img_001.jpg"
+            val tempColorPath = File(this@SampleOpenCVMatActivity.cacheDir.absolutePath, color_name)
+            val tempMaskPath = File(this@SampleOpenCVMatActivity.cacheDir.absolutePath, mask_name)
+            ResourceUtils.copyFileFromAssets(color_name, tempColorPath.absolutePath)
+            ResourceUtils.copyFileFromAssets(mask_name, tempMaskPath.absolutePath)
+            val srcColorMat = Imgcodecs.imread(tempColorPath.absolutePath)
+            val srcMaskMat = Imgcodecs.imread(tempMaskPath.absolutePath)
+            srcColorMat.also {
+                logd(TAG, "src_mat w:${it.width()}, h:${it.height()}, dims:${it.dims()}, channels:${it.channels()}, depth:${it.depth()}, type:${it.type()}")
+            }
+
+            val dstColorMat = Mat()
+            Imgproc.cvtColor(srcColorMat, dstColorMat, Imgproc.COLOR_BGR2RGBA)//rgb->rgba
+            dstColorMat.also {
+                logd(TAG, "dstColorMat w:${it.width()}, h:${it.height()}, dims:${it.dims()}, channels:${it.channels()}, depth:${it.depth()}, type:${it.type()}")
+            }
+
+            val dstMaskMat = Mat()
+            Imgproc.cvtColor(srcMaskMat, dstMaskMat, Imgproc.COLOR_BGR2RGB)//rgb->rgb
+            dstMaskMat.also {
+                logd(TAG, "dstMaskMat w:${it.width()}, h:${it.height()}, dims:${it.dims()}, channels:${it.channels()}, depth:${it.depth()}, type:${it.type()}")
+            }
+            val cols = dstMaskMat.cols()
+            val rows = dstMaskMat.rows()
+            for (col in 0 until cols) {
+                for (row in 0 until rows) {
+                    val alpha:Double = dstMaskMat.get(row, col)[0]
+                    val dstColor:DoubleArray = dstColorMat.get(row, col).also { it[3] = alpha }
+                    dstColorMat.put(row, col, dstColor[0], dstColor[1], dstColor[2], dstColor[3])
+                }
+            }
+
+            val bitmap = Bitmap.createBitmap(dstColorMat.width(), dstColorMat.height(), Bitmap.Config.ARGB_8888)
+            Utils.matToBitmap(dstColorMat, bitmap)
+            srcColorMat.release()
+            dstColorMat.release()
+            logd(TAG, "matToBitmap:${System.currentTimeMillis() - cost}")
+            runOnUiThread {
+                bind.ivPreview.setImageBitmap(bitmap)
+            }
+        }
+    }
 }

@@ -4,7 +4,7 @@ ext {
     android = [
             compileSdkVersion: 31,
             minSdkVersion    : 21,
-            targetSdkVersion : 30,
+            targetSdkVersion : 31,
 
             applicationId: rootProject.hasProperty('PACKAGE_NAME') && !(project.property('PACKAGE_NAME') == "NULL") ? project.property('PACKAGE_NAME')
                     : /*"com.test.at.face"*/ "com.tencent.qgame.playerproj"

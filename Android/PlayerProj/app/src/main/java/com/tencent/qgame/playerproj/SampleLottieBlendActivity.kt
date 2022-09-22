@@ -108,6 +108,7 @@ class SampleLottieBlendActivity : AppCompatActivity() {
                 is OnError -> {
                     Toast.makeText(applicationContext, "失败，code:${it.errorCode}，msg:${it.errorMsg}", Toast.LENGTH_SHORT).show()
                 }
+                else -> {}
             }
         })
         bind.btnStart.setOnClickListener {

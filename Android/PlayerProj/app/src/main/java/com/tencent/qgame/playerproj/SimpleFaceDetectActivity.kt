@@ -80,22 +80,23 @@ class SimpleFaceDetectActivity : AppCompatActivity() {
                                 dstcv.drawCircle(dstBox.centerX().toFloat(), dstBox.centerY().toFloat(), 12f, paint)
                             }
 
-                            var dstF = if (srcBox.height() > dstBox.height()) {
+                            var dstF:Size = if (srcBox.height() > dstBox.height()) {
+                                //放大大人脸区域
                                 getPuzzleOutSize(dstBox.width(), dstBox.height(), srcBox.height())
                             } else {
                                 Size(dstBox.width(), dstBox.height())
                             }
                             var s: Float = (dstF.height / dstBox.height().toFloat())
 
-                            //todo
-                            val newDstSize = Size((dstBmp.width * s).toInt(), (dstBmp.height * s).toInt())
-                            // if (newDstSize.height > h) {
-                            //     s = h / dstBmp.height
-                            //     dstF = getPuzzleOutSize(dstBox.width(), dstBox.height(), h.toInt())
-                            // }
+                            var offsetY = 0f
+                            val dstHeight = (dstBmp.height * s).toInt()
+                            if (dstHeight > h) { //整体放大后已超过目标高度
+                                offsetY = dstF.height * 0.1f
+                                logd("@@@", "dstHeight:$dstHeight, h:$h, offsetY:$offsetY")
+                            }
 
                             val x = (srcBox.centerX() - (dstBox.centerX() * s))
-                            val y = (srcBox.centerY() - (dstBox.centerY() * s))
+                            val y = (srcBox.centerY() - (dstBox.centerY() * s)) + offsetY
                             val m = Matrix()
                             m.postScale(s, s)
                             m.postTranslate(x,y)

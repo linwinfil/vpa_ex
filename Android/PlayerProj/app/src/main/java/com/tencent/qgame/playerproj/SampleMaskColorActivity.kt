@@ -27,6 +27,11 @@ import okio.Okio
 import okio.buffer
 import okio.sink
 import okio.source
+import org.opencv.android.Utils
+import org.opencv.core.Mat
+import org.opencv.core.get
+import org.opencv.imgcodecs.Imgcodecs
+import org.opencv.imgproc.Imgproc
 import org.opencv.videoio.VideoCapture
 import org.xml.sax.ext.LexicalHandler
 import java.io.ByteArrayInputStream
@@ -212,6 +217,71 @@ class SampleMaskColorActivity : AppCompatActivity() {
                     bind.progressCircular.progress = progress
                 }
                 ivPreview.setImageBitmap(bitmap)
+            }
+        }
+    }
+
+
+    private fun startMatColor() {
+        lifecycle.coroutineScope.launch {
+            tempResult.deleteRecursively()
+            withContext(Dispatchers.IO) {
+                val start = 1
+                val end = endFrames
+                val rangeTo = start.rangeTo(end)
+                val paint = Paint().apply { isAntiAlias = true;isFilterBitmap = true }
+                var newIndex = 0
+                val size = Size(720, 1280)
+                val bufferSize: Int = size.width * size.height * 4
+                var bitmap: Bitmap? = null
+                var tempBmp :Bitmap = Bitmap.createBitmap(size.width, size.height, Bitmap.Config.ARGB_8888)
+                val tempCanvas = Canvas(tempBmp)
+                val costime = measureTimeMillis {
+                    for (index in rangeTo) {
+                        val times = measureTimeMillis {
+                            val imgIndex = index
+                            val color_path = "${mvcolorCache.absolutePath}/${String.format(img_suffix, imgIndex)}.jpg"
+                            val mask_path = "${mvmaskCache.absolutePath}/${String.format(img_suffix, imgIndex)}.jpg"
+                            val colorSrcMat: Mat = Imgcodecs.imread(color_path)
+                            val maskSrcMat: Mat = Imgcodecs.imread(mask_path)
+                            bitmap = getMaskAlphaToDst4Mat(imgIndex, maskSrcMat, colorSrcMat)
+
+
+                            val drawBg = true
+                            val bg_path = "${mvbgCache.absolutePath}/${String.format(img_suffix, imgIndex)}.jpg"
+                            if (drawBg && FileUtils.isFileExists(bg_path)) {
+                                val bytes = bg_path.steamBytes()
+                                val bgbmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, decodeOP)
+
+                                val picture = Picture()
+                                val canvas = picture.beginRecording(size.width, size.height)
+                                canvas.drawBitmap(bgbmp, 0f, 0f, null)
+                                picture.endRecording()
+
+                                tempCanvas.drawColor(0, PorterDuff.Mode.CLEAR)
+                                tempCanvas.drawPicture(picture)
+                                tempCanvas.drawBitmap(bitmap!!, 0f, 0f, null)
+                                bitmap =tempBmp
+                            }
+                            // val savePath = "$tempResult/${String.format(img_suffix, imgIndex)}.jpeg"
+                            // ImageUtils.save(bitmap, savePath, Bitmap.CompressFormat.JPEG, 100, false)
+                            runOnUiThread {
+                                val progress = (index / end.toFloat() * 100).toInt()
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                    bind.progressCircular.setProgress(progress, true)
+                                } else {
+                                    bind.progressCircular.progress = progress
+                                }
+                                fgPreview.setImageBitmap(bitmap)
+                            }
+                            delay(16)
+
+                        }
+                        logd(TAG, "$index -> mask color:$times")
+                    }
+                }
+                loge(TAG, "mask blend completed!!!, ${costime}")
+                runOnUiThread { ToastUtils.showShort("mask blend completed!!!, $costime") }
             }
         }
     }
@@ -457,6 +527,16 @@ class SampleMaskColorActivity : AppCompatActivity() {
     private var dstBg:Bitmap? = null
     private var dstBgCanvas: Canvas? = null
     private val dstBgPaint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
+
+
+    private var maskDstMat: Mat? = null
+    private var colorDstMat: Mat? = null
+    private fun getMaskAlphaToDst4Mat(index: Int, maskSrcMat: Mat, colorSrcMat: Mat): Bitmap {
+        maskDstMat = maskDstMat ?: Mat()
+        colorDstMat = colorDstMat ?: Mat()
+
+        TODO("")
+    }
 
     private var bgBmp:Bitmap? = null
     private fun getMaskAlphaToDst(index: Int, mask: Bitmap, color: Bitmap): Bitmap {
